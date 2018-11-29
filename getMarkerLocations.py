@@ -9,12 +9,6 @@ SCALE = 25
 
 # marker id: type (string)
 markersMap = {
-	"L1": None,
-	"U1": None,
-	"R1": None,
-	"R2": None,
-	"D1": None,
-	"D2": None
 }
 
 # marker id: location (Pose)
@@ -25,6 +19,15 @@ markersLocationMap = {
 	"R2": (26,6.5),
 	"D1": (10.5,0),
 	"D2": (18.5,0)
+}
+
+cubeDropoffLocation = {
+    "L1": (2,9.5,180),
+    "U1": (14.5,16,90),
+    "R1": (24,12.5,0),
+    "R2": (24,6.5,0),
+    "D1": (10.5,2,270),
+    "D2": (18.5,2,270)
 }
 
 # marker id: location robot should be in to detect marker
@@ -46,8 +49,34 @@ async def getMarkerLocations(robot, img_clf):
     	await pathPlan(robot, location)
 
     	# identify the marker image
-		markersMap[marker] = getLabel(robot, img_clf)
+		markersMap[getLabel(robot, img_clf)] = marker
 	return markersMap
+
+
+async def goToCubes(robot, markersMap):
+
+    locations = ["L1", "U1", "D2", "D1"]
+    dests = ["drone", "plane", "", "inspector"]
+    angle = 270
+
+    for i, location in enumerate(locations):
+        await pathPlan(robot, location)
+        cozmo.turn_in_place(cozmo.util.degrees(angle))
+        cube = robot.world.wait_for_observed_light_cube(timeout=5)
+        if cube == None:
+            continue
+        print("Cozmo found a cube, and will now attempt to pick it up it:")
+        pickupCube = robot.pickup_object(cube, True, False, num_retries=1)
+        pickupCube.wait_for_completed()
+        destination = markersMap[dests[i]]
+        await pathPlan(robot, cubeDropoffLocation[destination])
+        robot.place_object_on_ground_here(cube, False, 2).wait_for_completed()
+
+
+
+
+
+
 
 def getLabel(robot, img_clf):
     MIN_HEAD_ANGLE = 0#-25
