@@ -136,7 +136,7 @@ async def kidnapped(robot, pf, grid):
 
 
 
-async def run(robot: cozmo.robot.Robot):
+async def localize(robot: cozmo.robot.Robot):
 
     global flag_odom_init, last_pose
     global grid, gui, pf
@@ -161,9 +161,9 @@ async def run(robot: cozmo.robot.Robot):
     # YOUR CODE HERE
 
     ###################
+
     localized = False
     curr_action = None
-    reachedGoal = False
     while True:
         # time.sleep(0.05)
         # time.sleep(.5)
@@ -172,12 +172,9 @@ async def run(robot: cozmo.robot.Robot):
             await kidnapped(robot, pf, grid)
             pf = ParticleFilter(grid)
             localized = False
-            reachedGoal = False
             curr_action = None
             continue
 
-        if reachedGoal:
-            continue
         # if curr_action and type(curr_action)==cozmo.robot.TurnInPlace and curr_action.is_running: continue
         odom = compute_odometry(robot.pose)
         last_pose = robot.pose
@@ -212,7 +209,6 @@ async def run(robot: cozmo.robot.Robot):
         if localized:
             # drive to goal state
             curr_action = None
-            print(curr_action)
             # if curr_action: curr_action.abort()
             # if driveToGoal(robot, curr_loc[:3]):
             #     print("reached goal")
@@ -224,10 +220,11 @@ async def run(robot: cozmo.robot.Robot):
             #     localized = False
             #     reachedGoal = False
 
-
+            return
 
 
             # driving to goal
+            '''
             print("driving to goal...")
             from cozmo.util import degrees, Pose, Speed, Distance
             global goal
@@ -299,7 +296,7 @@ async def run(robot: cozmo.robot.Robot):
                 continue
             print("turned second")
             reachedGoal = True
-
+            '''
 
 def lookAround(robot, markers):
     print("looking around...")
@@ -315,7 +312,7 @@ def lookAround(robot, markers):
     #     return robot.turn_in_place(angle=cozmo.util.degrees(-30))#, in_parallel=True)
     # else:
     #     return robot.drive_straight(distance=cozmo.util.distance_mm(40), speed=cozmo.util.speed_mmps(50))
-    
+
 
 async def driveToGoal(robot, robot_pose):
     print("driving to goal...")

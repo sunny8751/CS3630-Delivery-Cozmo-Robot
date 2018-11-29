@@ -1,9 +1,13 @@
 from train_classifier import createImageClassifier
+import cozmo
+import numpy as np
+import sys
 
+from go_to_goal import localize
 
-def run():
+def run(robot):
     # localize
-
+    localize(robot)
     # add grey square into path planning
 
     # store image marker locations
@@ -20,7 +24,8 @@ def run():
 
 if __name__ == '__main__':
 
-    # train images to create image classifier 
+    # train images to create image classifier
     img_clf = createImageClassifier()
 
-    # 
+    robot = None
+    run(robot)
