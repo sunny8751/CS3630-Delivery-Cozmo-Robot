@@ -40,52 +40,14 @@ markersImageClassificationLocationMap = {
 async def getMarkerLocations(robot, img_clf):
     for marker in markersLocationMap:
     	# get marker label location
-    	x,y = markersLocationMap[marker]
+    	location = markersLocationMap[marker]
 
     	# go to markerLocation via RRT
-    	path = pathPlan((x*SCALE, y*SCALE))
-    	if not path:
-    		print("CANNOT RRT TO MARKER!!!")
-    	else:
-            await driveAlongPath(path)
+    	await pathPlan(robot, location)
 
     	# identify the marker image
 		markersMap[marker] = getLabel(robot, img_clf)
 	return markersMap
-
-async def driveAlongPath(path):
-	# print("length to path is",len(path))
-	for node in path:
-		curr_pos = Node((starting_pos.x + robot.pose.position.x, starting_pos.y + robot.pose.position.y))
-		cmap.set_start(curr_pos)
-
-		dx,dy = node.x-curr_pos.x, node.y-curr_pos.y
-		dist = np.sqrt(dx**2+dy**2)
-        angle = np.arctan2(dy,dx) * 180 / np.pi
-	dAngle = (angle-robot.pose.rotation.angle_z.degrees)%360
-	if dAngle >= 180: dAngle = -(360-dAngle)
-                print(dAngle,dist)
-
-                await robot.turn_in_place(degrees(dAngle)).wait_for_completed()
-
-                d = 0
-                while d < dist:
-                    curr_pos = Node((starting_pos.x + robot.pose.position.x, starting_pos.y + robot.pose.position.y))
-                    cmap.set_start(curr_pos)
-                    breakToGoal, goal_center = await detect_cube_and_update_cmap(robot, marked, curr_pos)
-                    if breakToGoal:
-                        cmap.reset()
-                        RRT(cmap, cmap.get_start())
-                        break
-
-                    distToMove = min(50, dist-d)
-                    d += distToMove
-                    await robot.drive_straight(distance_mm(distToMove), speed_mmps(60), should_play_anim=False).wait_for_completed()
-
-                if breakToGoal: break
-
-            if breakToGoal: continue
-            return
 
 def getLabel(robot, img_clf):
     MIN_HEAD_ANGLE = 0#-25

@@ -30,7 +30,7 @@ def run(robot):
     # localize
     localize(robot)
 
-    # add grey square into path planning
+    # add grey square into path planning- DONE IN RRT.PY
 
     # store image marker locations
     markersMap = getMarkerLocations(robot, img_clf)
@@ -43,7 +43,7 @@ def run(robot):
             path plan to corresponding image marker
             drop cube at location
     '''
-    
+
 
 
 if __name__ == '__main__':
