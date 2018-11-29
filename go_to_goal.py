@@ -187,15 +187,6 @@ async def localize(robot: cozmo.robot.Robot):
         gui.show_mean(curr_loc[0], curr_loc[1], curr_loc[2], curr_loc[3])
         gui.updated.set()
 
-
-        if robot.is_picked_up:
-            print("robot was picked up1")
-            await kidnapped(robot, pf, grid)
-            pf = ParticleFilter(grid)
-            localized = False
-            reachedGoal = False
-            curr_action = None
-            continue
         if not localized:
             if isMeanGood:
                 print("localized!")
@@ -207,96 +198,8 @@ async def localize(robot: cozmo.robot.Robot):
                     curr_action = True
                 # curr_action = True
         if localized:
-            # drive to goal state
             curr_action = None
-            # if curr_action: curr_action.abort()
-            # if driveToGoal(robot, curr_loc[:3]):
-            #     print("reached goal")
-            #     reachedGoal = True
-            # else:
-            #     print("robot was picked up")
-            #     await kidnapped(robot, pf, grid)
-            #     pf = ParticleFilter(grid)
-            #     localized = False
-            #     reachedGoal = False
-
             return
-
-
-            # driving to goal
-            '''
-            print("driving to goal...")
-            from cozmo.util import degrees, Pose, Speed, Distance
-            global goal
-            import math
-            robot.stop_all_motors()
-            if robot.is_picked_up:
-                print("robot was picked up2")
-                await kidnapped(robot, pf, grid)
-                pf = ParticleFilter(grid)
-                localized = False
-                reachedGoal = False
-                curr_action = None
-                continue
-
-            robot_x, robot_y, robot_h = compute_mean_pose(pf.particles)[:3] # curr_loc[:3]
-            # to account for lag
-            robot_h -= 45
-            goal_x, goal_y, goal_h = goal
-            # await robot.turn_in_place(degrees(-robot_h)).wait_for_completed()
-            # print("turned first")
-            # if robot.is_picked_up:
-            #     return False
-            dx, dy = goal_x - robot_x, goal_y - robot_y
-            turn_degree = math.degrees(math.atan2(dy,dx))
-            # goal_pose = Pose(dx*24,dy*24,0,angle_z=degrees(turn_degree))
-            # action = robot.go_to_pose(goal_pose, relative_to_robot=True)
-            await robot.turn_in_place(degrees(diff_heading_deg(turn_degree, robot_h))).wait_for_completed()
-            # print(robot_h, turn_degree, "degrees")
-            # await robot.turn_in_place(degrees(-robot_h)).wait_for_completed()
-            # await robot.turn_in_place(degrees(turn_degree)).wait_for_completed()
-            print("turned first")
-            if robot.is_picked_up:
-                print("robot was picked up")
-                await kidnapped(robot, pf, grid)
-                pf = ParticleFilter(grid)
-                localized = False
-                reachedGoal = False
-                curr_action = None
-                continue
-
-            dist = math.sqrt(dx**2 + dy**2)*25
-            print("moving", dist)
-            dist_so_far = 0
-            while (dist_so_far < dist):
-                print("dist:", dist_so_far)
-                d = 40
-                d = min(d,dist-dist_so_far)
-                await robot.drive_straight(Distance(distance_mm=d), speed=Speed(speed_mmps=40), should_play_anim=False).wait_for_completed()
-                if robot.is_picked_up:
-                    print("robot was picked up")
-                    await kidnapped(robot, pf, grid)
-                    pf = ParticleFilter(grid)
-                    localized = False
-                    reachedGoal = False
-                    curr_action = None
-                    break
-                dist_so_far += 40
-
-            if not localized: continue
-            print("went to pose")
-            await robot.turn_in_place(degrees(-turn_degree)).wait_for_completed()
-            if robot.is_picked_up:
-                print("robot was picked up")
-                await kidnapped(robot, pf, grid)
-                pf = ParticleFilter(grid)
-                localized = False
-                reachedGoal = False
-                curr_action = None
-                continue
-            print("turned second")
-            reachedGoal = True
-            '''
 
 def lookAround(robot, markers):
     print("looking around...")
