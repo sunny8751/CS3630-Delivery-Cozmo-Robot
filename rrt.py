@@ -117,8 +117,35 @@ async def CozmoPlanning(robot: cozmo.robot.Robot):
     cozmo_pos = Node((x,y))
 
     while True:
-        
+        continue
 
+async def driveAlongPath(robot, path):
+    # Allows access to map and stopevent, which can be used to see if the GUI
+    # has been closed by checking stopevent.is_set()
+    global cmap, stopevent
+    from cozmo.util import degrees, distance_mm, speed_mmps, Pose, Angle
+
+    ########################################################################
+    # TODO: please enter your code below.
+    # Description of function provided in instructions
+
+    width, height = cmap.get_size()
+
+    marked = {}
+    curr_pos = Node((robot.pose.position.x, robot.pose.position.y))
+
+    # print("length to path is",len(path))
+    for node in path:
+        curr_pos = Node((robot.pose.position.x, robot.pose.position.y))
+        cmap.set_start(curr_pos)
+
+        dx,dy = node.x-curr_pos.x, node.y-curr_pos.y
+        dist = np.sqrt(dx**2+dy**2)
+        angle = np.arctan2(dy,dx) * 180 / np.pi
+        dAngle = (angle-robot.pose.rotation.angle_z.degrees)%360
+        if dAngle >= 180: dAngle = -(360-dAngle)
+        await robot.turn_in_place(degrees(dAngle)).wait_for_completed()
+        await robot.drive_straight(distance_mm(distToMove), speed_mmps(60), should_play_anim=False).wait_for_completed()
 
 def get_global_node(local_angle, local_origin, node):
     """Helper function: Transform the node's position (x,y) from local coordinate frame specified by local_origin and local_angle to global coordinate frame.
@@ -237,6 +264,17 @@ class RRTThread(threading.Thread):
             cmap.reset()
         stopevent.set()
 
+# start is a tuple (x,y) in mm
+def pathPlan(start):
+    cmap = CozMap("maps/emptygrid.json", node_generator)
+    cmap.set_start(Node(start))
+    # entered middle obstancle square in emptygrid.json
+
+    RRT(cmap, start)
+    if (cmap.is_solution_valid()):
+        return cmap.get_smooth_path()
+    else:
+        return None
 
 if __name__ == '__main__':
     global cmap, stopevent
@@ -250,7 +288,7 @@ if __name__ == '__main__':
         robot_thread = RobotThread()
         robot_thread.start()
     else:
-        cmap = CozMap("maps/map2.json", node_generator)
+        cmap = CozMap("emptygrid.json", node_generator)
         sim = RRTThread()
         sim.start()
     visualizer = Visualizer(cmap)
