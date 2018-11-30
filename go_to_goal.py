@@ -22,7 +22,7 @@ from PIL import Image
 from markers import detect, annotator
 
 from grid import CozGrid
-from gui import GUIWindow
+# from gui import GUIWindow
 from particle import Particle, Robot
 from setting import *
 from particle_filter import *
@@ -58,7 +58,7 @@ goal = (6,10,0)
 # map
 Map_filename = "map_arena.json"
 grid = CozGrid(Map_filename)
-gui = GUIWindow(grid, show_camera=True)
+# gui = GUIWindow(grid, show_camera=True)
 pf = ParticleFilter(grid)
 
 def compute_odometry(curr_pose, cvt_inch=True):
@@ -139,7 +139,7 @@ async def kidnapped(robot, pf, grid):
 async def localize(robot: cozmo.robot.Robot):
 
     global flag_odom_init, last_pose
-    global grid, gui, pf
+    global grid, pf
 
     # start streaming
     robot.camera.image_stream_enabled = True
@@ -179,13 +179,13 @@ async def localize(robot: cozmo.robot.Robot):
         odom = compute_odometry(robot.pose)
         last_pose = robot.pose
         markers, camera_image = await marker_processing(robot, camera_settings)
-        gui.show_camera_image(camera_image)
+        # gui.show_camera_image(camera_image)
         curr_loc = pf.update(odom, markers)
         isMeanGood = curr_loc[3]
         # print(isMeanGood)
-        gui.show_particles(pf.particles)
-        gui.show_mean(curr_loc[0], curr_loc[1], curr_loc[2], curr_loc[3])
-        gui.updated.set()
+        # gui.show_particles(pf.particles)
+        # gui.show_mean(curr_loc[0], curr_loc[1], curr_loc[2], curr_loc[3])
+        # gui.updated.set()
 
         if not localized:
             if isMeanGood:
@@ -199,7 +199,20 @@ async def localize(robot: cozmo.robot.Robot):
                 # curr_action = True
         if localized:
             curr_action = None
-            return
+            x,y,h = compute_mean_pose(pf.particles)[:3]
+            robot.stop_all_motors()
+            x *= 25
+            y *= 25
+
+            # move forward while inside center obstacle
+            dist = 0
+            while x >= 245 and x <= 405 and y >= 145 and y <= 305:
+                dist += 10
+                x += dist * np.cos(np.deg2rad(h))
+                y += dist * np.sin(np.deg2rad(h))
+            await robot.drive_straight(cozmo.util.distance_mm(dist), speed=cozmo.util.speed_mmps(60)).wait_for_completed()
+
+            return (x,y,h)
 
 def lookAround(robot, markers):
     print("looking around...")
@@ -209,7 +222,7 @@ def lookAround(robot, markers):
     # y = randint(-100,100)
     # return robot.go_to_pose(Pose(x, y, 0, angle_z=degrees(0)))
     # return robot.drive_wheel_motors(randint(5, 30), randint(5, 30))
-    return robot.drive_wheel_motors(40,5)
+    return robot.drive_wheel_motors(40,0)
     # if len(markers) == 0:
     #     # robot.set_head_angle(degrees(randint(0,10)), in_parallel=True)
     #     return robot.turn_in_place(angle=cozmo.util.degrees(-30))#, in_parallel=True)

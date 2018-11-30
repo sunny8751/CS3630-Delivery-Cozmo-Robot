@@ -310,66 +310,73 @@ class RRTThread(threading.Thread):
             cmap.reset()
         stopevent.set()
 
-async def findCornerCubes(robot):
-    # Allows access to map and stopevent, which can be used to see if the GUI
-    # has been closed by checking stopevent.is_set()
-    global cmap, stopevent
-    from cozmo.util import degrees, distance_mm, speed_mmps, Pose, Angle
-
-    ########################################################################
-    # TODO: please enter your code below.
-    # Description of function provided in instructions
-    await robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
-
-    width, height = cmap.get_size()
-    # scale = 25
-
-    marked = {}
-    curr_pos = Node((robot.pose.position.x, robot.pose.position.y))
-    # print("start pose",x,y)
-    cmap.set_start(curr_pos)
-    update_goal = False
-
-    while True:
-        curr_pos = Node((robot.pose.position.x, robot.pose.position.y))
-        cmap.set_start(curr_pos)
-
-        update_goal, goal_center = await detect_cube_and_update_cmap(robot, marked, curr_pos)
-        print(update_goal,goal_center)
-        if update_goal:
-            cmap.reset()
-
-        if goal_center is not None:
-            print("Saw cube")
-            RRT(cmap, cmap.get_start())
-
-        # if cmap.is_solved():
-            # goToCubes()
-            # drive to this corner
-            # do stuff with the cube
-            # delete this goal
-            # maybe reset the cmap?
+# async def findCornerCubes(robot, cmap):
+#     # Allows access to map and stopevent, which can be used to see if the GUI
+#     # has been closed by checking stopevent.is_set()
+#     global stopevent
+#     from cozmo.util import degrees, distance_mm, speed_mmps, Pose, Angle
+#
+#     ########################################################################
+#     # TODO: please enter your code below.
+#     # Description of function provided in instructions
+#     await robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
+#
+#     width, height = cmap.get_size()
+#     # scale = 25
+#
+#     marked = {}
+#     curr_pos = Node((robot.pose.position.x, robot.pose.position.y))
+#     # print("start pose",x,y)
+#     cmap.set_start(curr_pos)
+#     update_goal = False
+#
+#     while True:
+#         curr_pos = Node((robot.pose.position.x, robot.pose.position.y))
+#         cmap.set_start(curr_pos)
+#
+#         update_goal, goal_center = await detect_cube_and_update_cmap(robot, marked, curr_pos)
+#         print(update_goal,goal_center)
+#         if update_goal:
+#             cmap.reset()
+#
+#         if goal_center is not None:
+#             print("Saw cube")
+#             RRT(cmap, cmap.get_start())
+#
+#         # if cmap.is_solved():
+#             # goToCubes()
+#             # drive to this corner
+#             # do stuff with the cube
+#             # delete this goal
+#             # maybe reset the cmap?
 
 
 # start is a tuple (x,y) in mm
-async def pathPlan(robot, goal):
-    cmap = CozMap("maps/emptygrid.json", node_generator)
-    cmap.set_start(Node((robot.pose.position.x, robot.pose.position.y)))
+async def pathPlan(robot, goal, startPosition, cmap):
+    # cmap = CozMap("emptygrid.json", node_generator)
+    cmap.reset()
+    cmap.clear_goals()
+    startX,startY,startH = startPosition
+    print(robot.pose.position)
+    print((robot.pose.position.x, robot.pose.position.y))
+    print(startPosition)
+    print((robot.pose.position.x+startX, robot.pose.position.y+startY))
+    cmap.set_start(Node((robot.pose.position.x+startX, robot.pose.position.y+startY)))
     cmap.add_goal(Node(goal))
 
     # entered middle obstancle square in emptygrid.json
 
-    RRT(cmap, start)
+    RRT(cmap, cmap.get_start())
     if (cmap.is_solution_valid()):
         path = cmap.get_smooth_path()
-        await driveAlongPath(robot, path)
+        await driveAlongPath(robot, path, cmap)
     else:
         print("CANNOT RRT TO MARKER!!!")
 
-async def driveAlongPath(robot, path):
+async def driveAlongPath(robot, path, cmap):
     # Allows access to map and stopevent, which can be used to see if the GUI
     # has been closed by checking stopevent.is_set()
-    global cmap, stopevent
+    global stopevent
     from cozmo.util import degrees, distance_mm, speed_mmps, Pose, Angle
 
     ########################################################################
@@ -392,7 +399,7 @@ async def driveAlongPath(robot, path):
         dAngle = (angle-robot.pose.rotation.angle_z.degrees)%360
         if dAngle >= 180: dAngle = -(360-dAngle)
         await robot.turn_in_place(degrees(dAngle)).wait_for_completed()
-        await robot.drive_straight(distance_mm(distToMove), speed_mmps(60), should_play_anim=False).wait_for_completed()
+        await robot.drive_straight(distance_mm(dist), speed_mmps(60), should_play_anim=False).wait_for_completed()
 
 if __name__ == '__main__':
     global cmap, stopevent

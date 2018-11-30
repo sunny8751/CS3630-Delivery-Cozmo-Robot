@@ -1,8 +1,15 @@
+import threading
+
+from gui import Visualizer
 from train_classifier import createImageClassifier
 import cozmo
 import numpy as np
 import sys
 from getMarkerLocations import getMarkerLocations, goToCubes
+from cmap import *
+from rrt import node_generator
+# import pickle
+import imgclassification
 
 from go_to_goal import localize
 
@@ -22,28 +29,48 @@ cornerLocations = {
 	"D": (26,18)
 }
 
-def run(robot):
+scale = 25
+
+for map in [cubeDropoffLocation, cornerLocations]:
+    for key,value in map.items():
+        if len(value) == 3:
+            map[key] = (value[0]*scale, value[1]*scale, value[2])
+        else:
+            map[key] = (value[0]*scale, value[1]*scale)
+
+cmap = CozMap("emptygrid.json", node_generator)
+
+async def run(robot):
 	global cubeDropoffLocation
 	# train images to create image classifier
+	# filename = 'lab2classifier.sav'
+	# img_clf = imgclassification.ImageClassifier()
+	# img_clf.classifier = pickle.load(open(filename, 'rb'))
+
 	img_clf = createImageClassifier()
 
+
+
 	# localize
-	localize(robot)
+	start_x,start_y,start_h = await localize(robot)
+	start_h -= robot.pose.rotation.angle_z.degrees
 
-	# add grey square into path planning- DONE IN RRT.PY
-
-	# store image marker locations
-	markersMap = getMarkerLocations(robot, img_clf)
-
-	goToCubes(robot, markersMap)
-	'''
-	for each cube:
-		path plan to cube location
-		if cube exists:
-			lift cube
-			path plan to corresponding image marker
-			drop cube at location
-	'''
+	startPosition = (start_x, start_y, start_h)
+	#
+	# # add grey square into path planning- DONE IN RRT.PY
+	#
+	# # store image marker locations
+	markersMap = await getMarkerLocations(robot, img_clf, startPosition, cmap)
+	#
+	await goToCubes(robot, markersMap, startPosition, cmap)
+	# '''
+	# for each cube:
+	# 	path plan to cube location
+	# 	if cube exists:
+	# 		lift cube
+	# 		path plan to corresponding image marker
+	# 		drop cube at location
+	# '''
 
 class RobotThread(threading.Thread):
 	"""Thread to run cozmo code separate from main thread
@@ -63,6 +90,7 @@ if __name__ == '__main__':
 
 	robot_thread = RobotThread()
 	robot_thread.start()
+
 
 	visualizer = Visualizer(cmap)
 	visualizer.start()
