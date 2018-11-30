@@ -5,6 +5,11 @@ import time
 import random
 import numpy as np
 
+try:
+    import matplotlib
+    matplotlib.use('TkAgg')
+except ImportError:
+    pass
 
 from cmap import *
 from gui import *
@@ -338,7 +343,8 @@ async def findCornerCubes(robot):
             print("Saw cube")
             RRT(cmap, cmap.get_start())
 
-        if cmap.is_solved():
+        # if cmap.is_solved():
+            # goToCubes()
             # drive to this corner
             # do stuff with the cube
             # delete this goal
@@ -356,7 +362,7 @@ async def pathPlan(robot, goal):
     RRT(cmap, start)
     if (cmap.is_solution_valid()):
         path = cmap.get_smooth_path()
-        await driveAlongPath(robot, path)
+        await driveAlongPath(robot, path)
     else:
         print("CANNOT RRT TO MARKER!!!")
 
@@ -382,11 +388,11 @@ async def driveAlongPath(robot, path):
 
         dx,dy = node.x-curr_pos.x, node.y-curr_pos.y
         dist = np.sqrt(dx**2+dy**2)
-        angle = np.arctan2(dy,dx) * 180 / np.pi
+        angle = np.arctan2(dy,dx) * 180 / np.pi
         dAngle = (angle-robot.pose.rotation.angle_z.degrees)%360
         if dAngle >= 180: dAngle = -(360-dAngle)
-        await robot.turn_in_place(degrees(dAngle)).wait_for_completed()
-        await robot.drive_straight(distance_mm(distToMove), speed_mmps(60), should_play_anim=False).wait_for_completed()
+        await robot.turn_in_place(degrees(dAngle)).wait_for_completed()
+        await robot.drive_straight(distance_mm(distToMove), speed_mmps(60), should_play_anim=False).wait_for_completed()
 
 if __name__ == '__main__':
     global cmap, stopevent
