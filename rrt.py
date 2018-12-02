@@ -205,8 +205,14 @@ def get_global_node(local_angle, local_origin, node):
         new_node -- a Node object that decribes the node's position in global coordinate frame
     """
     ########################################################################
-    # TODO: please enter your code below.
-    new_node = None
+    x = node.x
+    y = node.y
+
+    new_x = (x * math.cos(local_angle)) - (y * math.sin(local_angle)) + local_origin.x
+    new_y = (y * math.cos(local_angle)) + (x * math.sin(local_angle)) + local_origin.y
+
+    new_node = Node(new_x, new_y)
+
     return new_node
 
 
@@ -361,6 +367,7 @@ async def pathPlan(robot, goal, startPosition, cmap):
     print((robot.pose.position.x, robot.pose.position.y))
     print(startPosition)
     print((robot.pose.position.x+startX, robot.pose.position.y+startY))
+
     cmap.set_start(Node((robot.pose.position.x+startX, robot.pose.position.y+startY)))
     cmap.add_goal(Node(goal))
 
@@ -369,11 +376,11 @@ async def pathPlan(robot, goal, startPosition, cmap):
     RRT(cmap, cmap.get_start())
     if (cmap.is_solution_valid()):
         path = cmap.get_smooth_path()
-        await driveAlongPath(robot, path, cmap)
+        await driveAlongPath(robot, path, startPosition, cmap)
     else:
         print("CANNOT RRT TO MARKER!!!")
 
-async def driveAlongPath(robot, path, cmap):
+async def driveAlongPath(robot, path, startPosition, cmap):
     # Allows access to map and stopevent, which can be used to see if the GUI
     # has been closed by checking stopevent.is_set()
     global stopevent
@@ -386,11 +393,13 @@ async def driveAlongPath(robot, path, cmap):
     width, height = cmap.get_size()
 
     marked = {}
-    curr_pos = Node((robot.pose.position.x, robot.pose.position.y))
+    curr_pos = Node((robot.pose.position.x+startPosition[0], robot.pose.position.y+startPosition[1]))
 
     # print("length to path is",len(path))
     for node in path:
-        curr_pos = Node((robot.pose.position.x, robot.pose.position.y))
+        curr_pos = Node((robot.pose.position.x+startPosition[0], robot.pose.position.y+startPosition[1]))
+        print("Drive along path: ", robot.pose.position.x+startPosition[0], robot.pose.position.y+startPosition[1])
+
         cmap.set_start(curr_pos)
 
         dx,dy = node.x-curr_pos.x, node.y-curr_pos.y

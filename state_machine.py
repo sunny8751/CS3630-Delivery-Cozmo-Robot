@@ -1,5 +1,7 @@
 import threading
 
+import time
+
 from gui import Visualizer
 from train_classifier import createImageClassifier
 import cozmo
@@ -52,10 +54,16 @@ async def run(robot):
 
 
 	# localize
-	start_x,start_y,start_h = await localize(robot)
+
+	#start_x,start_y,start_h = await localize(robot)
+	start_x = 20 * 25
+	start_y = 8 * 25
+	start_h = 0
 	start_h -= robot.pose.rotation.angle_z.degrees
 
 	startPosition = (start_x, start_y, start_h)
+
+	print(startPosition)
 	#
 	# # add grey square into path planning- DONE IN RRT.PY
 	#
