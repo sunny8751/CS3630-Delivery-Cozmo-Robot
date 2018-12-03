@@ -70,21 +70,23 @@ async def run(robot):
 	# img_clf.classifier = pickle.load(open(filename, 'rb'))
 
 	img_clf = imgclassification.ImageClassifier()
-	# filename = 'newClassifier.sav'
+	# filename = 'lab6classifier.sav'
 	filename = 'lab2classifier.sav'
 	img_clf.classifer = pickle.load(open(filename, 'rb'))
 
 
 	# localize
 	# better word for start position is "position delta", difference of actual location and robot's pose
-	start_x,start_y,start_h = await localize(robot)
 
-	print("Start_H", start_h)
+	shouldLocalize = False
 
-	start_h -= 360 
-	start_h % 360
+	if shouldLocalize:
+		robot_pose = await localize(robot)
 
-	await pathPlan(robot, (150,250), [start_x, start_y, start_h], cmap)
+		await pathPlan(robot, (150,250), robot_pose, cmap)
+		await robot.turn_in_place(degrees(-robot_pose[2])).wait_for_completed()
+
+		await robot.say_text("Default position").wait_for_completed()
 
 	# robot_pose = [152.4, 254, 0]
 	robot_pose = [150, 250, 0]
@@ -102,7 +104,7 @@ async def run(robot):
 	# print("localization time: ", time.time()-startTime)
 
 	# store image marker locations
-	cmap.set_start(Node((start_x, start_y)))
+	cmap.set_start(Node((robot_pose[0], robot_pose[1])))
 	markersMap = await getMarkerLocations(robot, img_clf, robot_pose, cmap)
 
 	#await goToCubes(robot, markersMap, robot_pose, cmap)
