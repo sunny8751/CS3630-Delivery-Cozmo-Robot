@@ -14,12 +14,12 @@ markersMap = {
 
 # marker id: location (Pose)
 markersLocationMap = {
-    "L1": (0, 9.5),
-    "U1": (14.5, 18),
-    "R1": (26, 12.5),
-    "R2": (26, 6.5),
-    "D1": (10.5, 0),
-    "D2": (18.5, 0)
+    "L1": (0, 9.5), # x+offset
+    "U1": (14.5, 18), # y-offset
+    "R1": (26, 12.5), # x-offset
+    "R2": (26, 6.5), #x-offset
+    "D1": (10.5, 0), # y+offset
+    "D2": (18.5, 0) #y+offset
 }
 
 cubeDropoffLocation = {
@@ -33,13 +33,15 @@ cubeDropoffLocation = {
 
 # marker id: location robot should be in to detect marker
 markersImageClassificationLocationMap = {
-    "L1": (5, 9.5, 180),
+    "L1": (6, 9.5, 180),
     "U1": (14.5, 13, 90),
-    "R1": (21, 12.5, 0),
-    "R2": (21, 6.5, 0),
-    "D1": (10.5, 5, 270),
-    "D2": (18.5, 5, 270)
+    "R1": (20, 12.5, 0),
+    "R2": (20, 6.5, 0),
+    "D1": (10.5, 5.5, 270),
+    "D2": (18.5, 5.5, 270)
 }
+
+markersSet = {"drone", "plane", "hands", "place", "inspection", "order"}
 
 scale = 25
 for map in [cubeDropoffLocation, markersLocationMap, markersImageClassificationLocationMap]:
@@ -56,6 +58,9 @@ async def getMarkerLocations(robot, img_clf, startPosition, cmap):
 
         # go to markerLocation via RRT
         await rrt.pathPlan(robot, (x,y), startPosition, cmap)
+        dAngle = (h - robot.pose.rotation.angle_z.degrees - startPosition[2]) % 360
+        if dAngle >= 180: dAngle = -(360 - dAngle)
+        await robot.turn_in_place(cozmo.util.degrees(dAngle)).wait_for_completed()
         # TODO set heading angle
         print("Marker Path Planning complete " +  marker)
 
@@ -85,28 +90,35 @@ async def goToCubes(robot, markersMap, startPosition, cmap):
 
 
 async def getLabel(robot, img_clf):
-    MIN_HEAD_ANGLE = 0  # -25
-    MAX_HEAD_ANGLE = 20  # 44.5
+    print("getting label")
+    robot.camera.image_stream_enabled = True
+    robot.camera.color_image_enabled = False
+    robot.camera.enable_auto_exposure()
+    MIN_HEAD_ANGLE = 8  # -25
+    MAX_HEAD_ANGLE = 12  # 44.5
     data_raw = []
     angle = MIN_HEAD_ANGLE
-    for i in range(10):
+    for i in range(5):
         # tilt
         await robot.set_head_angle(cozmo.util.degrees(angle)).wait_for_completed()
         # take image
+        time.sleep(.5)
         latest_image = robot.world.latest_image
         if not latest_image: continue
         new_image = latest_image.raw_image
         if not new_image: continue
 
-        # timestamp = datetime.datetime.now().strftime("%dT%H%M%S%f")
-        # new_image.save("./idle_imgs/" + timestamp + ".bmp")
+        timestamp = datetime.datetime.now().strftime("%dT%H%M%S%f")
+        new_image.save("./test_imgs/" + timestamp + ".bmp")
 
         data_raw.append(np.array(new_image))
-        angle += (MAX_HEAD_ANGLE - MIN_HEAD_ANGLE) / 10
+        angle += (MAX_HEAD_ANGLE - MIN_HEAD_ANGLE) / 5
 
     # convert images into features
+    # print("raw data is", data_raw)
     data = img_clf.extract_image_features(data_raw)
 
+    #extracted_image = img_clf.predictOneImage(data)
     predicted_labels = img_clf.predict_labels(data)
     print(predicted_labels)
 
@@ -114,6 +126,7 @@ async def getLabel(robot, img_clf):
     frequency = {}
     for p_label in predicted_labels:
         if p_label == 'none': continue
+        if p_label not in markersSet: continue
         if p_label in frequency:
             frequency[p_label] += 1
         else:
@@ -125,4 +138,13 @@ async def getLabel(robot, img_clf):
         if frequency[l] > maxFrequency:
             label = l
             maxFrequency = frequency[l]
+
+    print(label)
+    # if label in markersSet:
+    #     markersSet.remove(label)
+    # elif len(markersSet) == 1:
+    #     label = list(markersSet)[0]
+    # else:
+    #     print("error: weird label")
+    await robot.say_text(label).wait_for_completed()
     return label

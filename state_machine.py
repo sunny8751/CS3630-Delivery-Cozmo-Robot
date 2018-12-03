@@ -9,8 +9,8 @@ import numpy as np
 import sys
 from getMarkerLocations import getMarkerLocations, goToCubes
 from cmap import *
-from rrt import node_generator
-# import pickle
+from rrt import node_generator, pathPlan
+import pickle
 import imgclassification
 
 from go_to_goal import localize
@@ -44,26 +44,38 @@ cmap = CozMap("emptygrid.json", node_generator)
 
 async def run(robot):
 	global cubeDropoffLocation
+	startTime = time.time()
 	# train images to create image classifier
 	# filename = 'lab2classifier.sav'
 	# img_clf = imgclassification.ImageClassifier()
 	# img_clf.classifier = pickle.load(open(filename, 'rb'))
 
-	img_clf = createImageClassifier()
-
+	img_clf = imgclassification.ImageClassifier()
+	filename = 'lab2classifier.sav'
+	img_clf.classifer = pickle.load(open(filename, 'rb'))
 
 
 	# localize
+	# better word for start position is "position delta", difference of actual location and robot's pose
+	# start_x,start_y,start_h = await localize(robot)
 
-	#start_x,start_y,start_h = await localize(robot)
-	start_x = 20 * 25
-	start_y = 8 * 25
-	start_h = 0
-	start_h -= robot.pose.rotation.angle_z.degrees
+	start_x = 20 * 25 - robot.pose.position.x
+	start_y = 8 * 25 - robot.pose.position.y
+	start_h = -robot.pose.rotation.angle_z.degrees
 
 	startPosition = (start_x, start_y, start_h)
 
-	print(startPosition)
+	print("start position: ", startPosition)
+	print("robot pose: ", robot.pose.position.x, robot.pose.position.y, robot.pose.rotation.angle_z.degrees)
+	print("curr position: ", startPosition[0]+robot.pose.position.x, startPosition[1]+robot.pose.position.y, robot.pose.rotation.angle_z.degrees + startPosition[2])
+	print("localization time: ", time.time()-startTime)
+
+
+	# await pathPlan(robot, (20*25,8*25), startPosition, cmap)
+	# return
+
+	# time.sleep(10)
+	# return
 	#
 	# # add grey square into path planning- DONE IN RRT.PY
 	#

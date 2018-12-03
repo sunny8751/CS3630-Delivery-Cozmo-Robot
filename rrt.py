@@ -393,22 +393,54 @@ async def driveAlongPath(robot, path, startPosition, cmap):
     width, height = cmap.get_size()
 
     marked = {}
-    curr_pos = Node((robot.pose.position.x+startPosition[0], robot.pose.position.y+startPosition[1]))
+    # prev_pos = path[0]
 
     # print("length to path is",len(path))
     for node in path:
-        curr_pos = Node((robot.pose.position.x+startPosition[0], robot.pose.position.y+startPosition[1]))
-        print("Drive along path: ", robot.pose.position.x+startPosition[0], robot.pose.position.y+startPosition[1])
 
-        cmap.set_start(curr_pos)
+        # print(robot.pose.position.x, robot.pose.position.y)
+        curr_pos = Node((robot.pose.position.x+startPosition[0], robot.pose.position.y+startPosition[1]))
+        print("RRT POS")
+        # print(prev_pos.x, prev_pos.y)
+        print("Actual Position")
+        print(robot.pose.position.x+startPosition[0], robot.pose.position.y+startPosition[1],robot.pose.rotation.angle_z.degrees + startPosition[2])
+        #curr_pos = node
+        #print("Drive along path: ", curr_pos.x, curr_pos.y, robot.pose.rotation.angle_z.degrees + startPosition[2])
+        #print("Driving to: ", node.x, node.y)
+        print()
+
+
+        cmap.set_start(Node((robot.pose.position.x + startPosition[0], robot.pose.position.y + startPosition[1])))
 
         dx,dy = node.x-curr_pos.x, node.y-curr_pos.y
         dist = np.sqrt(dx**2+dy**2)
-        angle = np.arctan2(dy,dx) * 180 / np.pi
-        dAngle = (angle-robot.pose.rotation.angle_z.degrees)%360
-        if dAngle >= 180: dAngle = -(360-dAngle)
+        angle = np.degrees(np.arctan2(dy,dx))
+        print("Dx: " , dx)
+        print("Dy: " , dy)
+        print("angle: " , angle)
+
+        #dAngle = (angle-robot.pose.rotation.angle_z.degrees - startPosition[2])%360
+        # if dAngle >= 180: dAngle = -(360-dAngle)
+        dAngle = diff_heading_deg(angle, robot.pose.rotation.angle_z.degrees + startPosition[2])
+        print("Distance: ", dist, "Dangle: ", dAngle)
         await robot.turn_in_place(degrees(dAngle)).wait_for_completed()
+
+        curr_pos = Node((robot.pose.position.x+startPosition[0], robot.pose.position.y+startPosition[1]))
+        cmap.set_start(curr_pos)
+        dx, dy = node.x - curr_pos.x, node.y - curr_pos.y
+        dist = np.sqrt(dx ** 2 + dy ** 2)
+
+        time.sleep(1)
         await robot.drive_straight(distance_mm(dist), speed_mmps(60), should_play_anim=False).wait_for_completed()
+
+        curr_pos = Node((robot.pose.position.x + startPosition[0], robot.pose.position.y + startPosition[1]))
+        cmap.set_start(curr_pos)
+        time.sleep(1)
+        #await robot.go_to_pose(cozmo.util.pose_z_angle(node.x, node.y, 0, angle_z = cozmo.util.Angle(dAngle))).wait_for_completed()
+        # prev_pos = node
+
+    curr_pos = Node((robot.pose.position.x + startPosition[0], robot.pose.position.y + startPosition[1]))
+    cmap.set_start(curr_pos)
 
 if __name__ == '__main__':
     global cmap, stopevent

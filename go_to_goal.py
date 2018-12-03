@@ -51,6 +51,7 @@ class ParticleFilter:
 # tmp cache
 last_pose = cozmo.util.Pose(0,0,0,angle_z=cozmo.util.Angle(degrees=0))
 flag_odom_init = False
+picTime = time.time()
 
 # goal location for the robot to drive to, (x, y, theta)
 goal = (6,10,0)
@@ -102,9 +103,10 @@ async def marker_processing(robot, camera_settings, show_diagnostic_image=False)
         - a PIL Image of what Cozmo's camera sees with marker annotations
     '''
 
-    global grid
+    global grid, picTime
 
     # Wait for the latest image from Cozmo
+    picTime = time.time()
     image_event = await robot.world.wait_for(cozmo.camera.EvtNewRawCameraImage, timeout=30)
 
     # Convert the image to grayscale
@@ -140,6 +142,7 @@ async def localize(robot: cozmo.robot.Robot):
 
     global flag_odom_init, last_pose
     global grid, pf
+    global picTime
 
     # start streaming
     robot.camera.image_stream_enabled = True
@@ -190,6 +193,7 @@ async def localize(robot: cozmo.robot.Robot):
         if not localized:
             if isMeanGood:
                 print("localized!")
+                robot.stop_all_motors()
                 localized = True
             else:
                 # actively look around
@@ -198,21 +202,37 @@ async def localize(robot: cozmo.robot.Robot):
                     curr_action = True
                 # curr_action = True
         if localized:
+            #backtrack cuz of lag
+            # totalTime = time.time()-picTime
+            # await robot.turn_in_place(cozmo.util.degrees(180)).wait_for_completed()
+            # robot.drive_wheel_motors(0,40)
+            # timeDelta = time.time()
+            # while (time.time() - timeDelta) < totalTime:
+            #     continue
+            # robot.stop_all_motors()
+            # await robot.turn_in_place(cozmo.util.degrees(180)).wait_for_completed()
+
             curr_action = None
             x,y,h = compute_mean_pose(pf.particles)[:3]
-            robot.stop_all_motors()
             x *= 25
             y *= 25
+            h -= 45
+            print("before turn to 0:", x,y,h)
+            await robot.turn_in_place(cozmo.util.degrees(-h)).wait_for_completed()
+            h = 0
+            print("after turn to 0:", x,y,h)
 
             # move forward while inside center obstacle
             dist = 0
             while x >= 245 and x <= 405 and y >= 145 and y <= 305:
                 dist += 10
-                x += dist * np.cos(np.deg2rad(h))
-                y += dist * np.sin(np.deg2rad(h))
+                x += 10 * np.cos(np.deg2rad(h))
+                y += 10 * np.sin(np.deg2rad(h))
             await robot.drive_straight(cozmo.util.distance_mm(dist), speed=cozmo.util.speed_mmps(60)).wait_for_completed()
 
-            return (x,y,h)
+            print("localize xyh:",x,y,h)
+            newAngle = diff_heading_deg(h, robot.pose.rotation.angle_z.degrees) % 360
+            return (x-robot.pose.position.x,y-robot.pose.position.y, newAngle)
 
 def lookAround(robot, markers):
     print("looking around...")
