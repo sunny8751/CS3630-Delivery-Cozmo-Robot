@@ -34,10 +34,10 @@ cubeDropoffLocation = {
 
 # marker id: location robot should be in to detect marker
 markersImageClassificationLocationMap = {
-    "L1": (6, 9.5, 180),
+    "L1": (8, 9.5, 180),
     "U1": (14.5, 12.5, 90),
-    "R1": (20, 12.5, 0),
-    "R2": (20, 6.5, 0),
+    "R1": (21, 12.5, 0),
+    "R2": (21, 6.5, 0),
     "D1": (10.5, 5.5, 270),
     "D2": (18.5, 5.5, 270)
 }
@@ -77,15 +77,15 @@ async def getMarkerLocations(robot, img_clf, robot_pose, cmap):
             continue
 
         del markers[i]
-        i = i % len(markers)
+        if len(markers) > 0: i = i % len(markers)
         markersMap[label] = marker
 
     return markersMap
 
 
-async def goToCubes(robot, markersMap, robot_pose, cmap):
+async def goToCubes(robot, markersMap, robot_pose, cmap, picked_up):
     locations = ["L1", "U1", "D2", "D1"]
-    dests = ["drone", "plane", "place", "inspection"]
+    dests = ["place", "hands", "inspection", "order"]
     angle = 300
     await robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
 
@@ -108,7 +108,7 @@ async def goToCubes(robot, markersMap, robot_pose, cmap):
         cube = await robot.world.wait_for_observed_light_cube(timeout=10)
         if cube == None:
             continue
-        print("Cozmo found a cube, and will now attempt to pick it up it:")
+        print("Cozmo found a cube, and will now attempt to pick it up:")
         await robot.pickup_object(cube, True, False, num_retries=3).wait_for_completed()
 
         # update pose after picking up cube
@@ -145,7 +145,8 @@ async def getLabel(robot, img_clf):
         if not new_image: continue
 
         # timestamp = datetime.datetime.now().strftime("%dT%H%M%S%f")
-        # new_image.save("./test_imgs/" + timestamp + ".bmp")
+        # new_image.save("./debug_imgs/" + timestamp + ".bmp")
+        # print("new image:",timestamp)
 
         data_raw.append(np.array(new_image))
         angle += (MAX_HEAD_ANGLE - MIN_HEAD_ANGLE) / 5
@@ -175,7 +176,6 @@ async def getLabel(robot, img_clf):
             label = l
             maxFrequency = frequency[l]
 
-    print(label)
     if label in markersSet:
         markersSet.remove(label)
     elif len(markersSet) == 1:
@@ -184,4 +184,5 @@ async def getLabel(robot, img_clf):
         print("error: weird label")
         label = None
     await robot.say_text("none" if label==None else label).wait_for_completed()
+    print(label)
     return label

@@ -234,7 +234,7 @@ class CozMap:
 
         lengthOfPath = len(path)
 
-        for i in range(lengthOfPath):
+        for i in range(lengthOfPath*4):
             randomSample = random.sample(range(lengthOfPath), 2)
             randomSample.sort()
             nodeStart = path[randomSample[0]]

@@ -337,7 +337,35 @@ async def driveAlongPath(robot, path, robot_pose, cmap):
             # if dAngle >= 180: dAngle = -(360-dAngle)
             dAngle = diff_heading_deg(targetAngle, robot_pose[2])
             # print("Distance: ", dist, "Dangle: ", dAngle)
+            # prev_pose = robot.pose
+
+            '''
+            Helper function: Transform the node's position (x,y) from local coordinate frame specified by local_origin and local_angle to global coordinate frame.
+                                    This function is used in detect_cube_and_update_cmap()
+                    Arguments:
+                    local_angle, local_origin -- specify local coordinate frame's origin in global coordinate frame
+                    local_angle -- a single angle value
+                    local_origin -- a Node object
+            '''
+
+
+            prev_pose = robot.pose
+            # prev_pos = get_global_node(robot_pose[2], curr_pos, Node((0,0)))
+            # print("prev", (prev_pos.x,prev_pos.y), "now", robot_pose)
             await robot.turn_in_place(degrees(dAngle)).wait_for_completed()
+
+            # prev_pos = get_global_node(robot_pose[2], curr_pos, Node((0,0)))
+            # print("prev", (prev_pos.x,prev_pos.y), "now", robot_pose)
+
+            # now_pos = get_global_node(robot_pose[2]+dAngle, Node((0,0)), robot.pose.position)
+            print("inaccuracies: ", robot.pose.position.x - prev_pose.position.x, robot.pose.position.y - prev_pose.position.y, abs(robot.pose.rotation.angle_z.degrees - prev_pose.rotation.angle_z.degrees) - abs(dAngle))
+            # print("inaccuracies: ", now_pos.x - prev_pos.x, now_pos.y - prev_pos.y, abs(robot.pose.rotation.angle_z.degrees - prev_pose.rotation.angle_z.degrees) - abs(dAngle))
+            # robot_pose[0] += robot.pose.position.x - prev_pose.position.x
+            # robot_pose[1] += robot.pose.position.y - prev_pose.position.y
+            # robot_pose[0] += now_pos.x - prev_pos.x
+            # robot_pose[1] += now_pos.y - prev_pos.y
+            # robot_pose[2] += robot.pose.rotation.angle_z.degrees - prev_pose.rotation.angle_z.degrees
+
             robot_pose[2] += dAngle
 
             dist = np.sqrt(dx ** 2 + dy ** 2)

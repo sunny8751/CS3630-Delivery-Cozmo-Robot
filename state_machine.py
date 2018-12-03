@@ -60,6 +60,7 @@ async def run(robot):
 	# img_clf.classifier = pickle.load(open(filename, 'rb'))
 
 	img_clf = imgclassification.ImageClassifier()
+	# filename = 'newClassifier.sav'
 	filename = 'lab2classifier.sav'
 	img_clf.classifer = pickle.load(open(filename, 'rb'))
 
@@ -86,7 +87,7 @@ async def run(robot):
 	# store image marker locations
 	markersMap = await getMarkerLocations(robot, img_clf, robot_pose, cmap)
 
-	#picked_up = set()
+	# picked_up = set()
 	# await goToCubes(robot, testMarkersMap, robot_pose, cmap, picked_up)
 
 class RobotThread(threading.Thread):
@@ -102,7 +103,8 @@ class RobotThread(threading.Thread):
 		stopevent.set()
 
 if __name__ == '__main__':
-	global cmap, stopevent
+	# global cmap, 
+	global stopevent
 	stopevent = threading.Event()
 
 	robot_thread = RobotThread()
