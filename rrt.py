@@ -305,6 +305,93 @@ async def driveAlongPath(robot, path, robot_pose, cmap):
     # print("length to path is",len(path))
     redoRRT = True
     while redoRRT:
+        print("Driving along path")
+        redoRRT = False
+        for node in path:
+
+            # print(robot.pose.position.x, robot.pose.position.y)
+            curr_pos = Node((robot_pose[0], robot_pose[1]))
+            # TODO: FIX THIS SHIT
+            # update_cmap, goal_center = await detect_cube_and_update_cmap(robot, marked, curr_pos, cmap)
+            # if update_cmap:
+            #     print("REDOING RRT BECAUSE IT SAW A CUBE")
+            #     cmap.reset()
+            #     cmap.set_start(curr_pos)
+            #     RRT(cmap, curr_pos)
+            #     if (cmap.is_solution_valid()):
+            #         path = cmap.get_smooth_path()
+            #     else:
+            #         print("NO SOLUTION")
+            #     redoRRT = True
+            #     break
+
+            cmap.set_start(curr_pos)
+
+            dx,dy = node.x-curr_pos.x, node.y-curr_pos.y
+            targetAngle = np.degrees(np.arctan2(dy,dx))
+            # print("Dx: " , dx)
+            # print("Dy: " , dy)
+            # print("angle: " , targetAngle)
+
+            #dAngle = (angle-robot.pose.rotation.angle_z.degrees - startPosition[2])%360
+            # if dAngle >= 180: dAngle = -(360-dAngle)
+            dAngle = diff_heading_deg(targetAngle, robot_pose[2])
+            # print("Distance: ", dist, "Dangle: ", dAngle)
+            await robot.turn_in_place(degrees(dAngle)).wait_for_completed()
+            robot_pose[2] += dAngle
+
+            dist = np.sqrt(dx ** 2 + dy ** 2)
+
+            #time.sleep(1)
+            await robot.drive_straight(distance_mm(dist), speed_mmps(40), should_play_anim=False).wait_for_completed()
+            robot_pose[0] += dx
+            robot_pose[1] += dy
+
+            curr_pos = Node((robot_pose[0], robot_pose[1]))
+            cmap.set_start(curr_pos)
+            #time.sleep(1)
+            #await robot.go_to_pose(cozmo.util.pose_z_angle(node.x, node.y, 0, angle_z = cozmo.util.Angle(dAngle))).wait_for_completed()
+            # prev_pos = node
+
+    curr_pos = Node((robot_pose[0], robot_pose[1]))
+    cmap.set_start(curr_pos)
+
+# start is a tuple (x,y) in mm
+async def pathPlanCubes(robot, goal, robot_pose, cmap):
+    # cmap = CozMap("emptygrid.json", node_generator)
+    cmap.reset()
+    cmap.clear_goals()
+
+    cmap.set_start(Node((robot_pose[0], robot_pose[1])))
+    cmap.add_goal(Node(goal))
+
+    # entered middle obstancle square in emptygrid.json
+
+    RRT(cmap, cmap.get_start())
+    if (cmap.is_solution_valid()):
+        path = cmap.get_smooth_path()
+        await driveAlongPathCubes(robot, path, robot_pose, cmap)
+    else:
+        print("CANNOT RRT TO MARKER!!!")
+
+async def driveAlongPathCubes(robot, path, robot_pose, cmap):
+    # Allows access to map and stopevent, which can be used to see if the GUI
+    # has been closed by checking stopevent.is_set()
+    global stopevent
+    from cozmo.util import degrees, distance_mm, speed_mmps, Pose, Angle
+
+    ########################################################################
+    # TODO: please enter your code below.
+    # Description of function provided in instructions
+
+    width, height = cmap.get_size()
+
+    marked = {}
+    # prev_pos = path[0]
+    # print("length to path is",len(path))
+    redoRRT = True
+    while redoRRT:
+        print("Driving along path")
         redoRRT = False
         for node in path:
 
@@ -316,7 +403,11 @@ async def driveAlongPath(robot, path, robot_pose, cmap):
                 print("REDOING RRT BECAUSE IT SAW A CUBE")
                 cmap.reset()
                 cmap.set_start(curr_pos)
-                RRT(cmap, cmap.get_start())
+                RRT(cmap, curr_pos)
+                if (cmap.is_solution_valid()):
+                    path = cmap.get_smooth_path()
+                else:
+                    print("NO SOLUTION")
                 redoRRT = True
                 break
 
@@ -324,9 +415,9 @@ async def driveAlongPath(robot, path, robot_pose, cmap):
 
             dx,dy = node.x-curr_pos.x, node.y-curr_pos.y
             targetAngle = np.degrees(np.arctan2(dy,dx))
-            print("Dx: " , dx)
-            print("Dy: " , dy)
-            print("angle: " , targetAngle)
+            # print("Dx: " , dx)
+            # print("Dy: " , dy)
+            # print("angle: " , targetAngle)
 
             #dAngle = (angle-robot.pose.rotation.angle_z.degrees - startPosition[2])%360
             # if dAngle >= 180: dAngle = -(360-dAngle)

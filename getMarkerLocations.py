@@ -9,8 +9,6 @@ import cmap
 from utils import *
 
 
-SCALE = 25.4
-
 # marker id: type (string)
 markersMap = {
 }
@@ -37,7 +35,7 @@ cubeDropoffLocation = {
 # marker id: location robot should be in to detect marker
 markersImageClassificationLocationMap = {
     "L1": (6, 9.5, 180),
-    "U1": (14.5, 13, 90),
+    "U1": (14.5, 12.5, 90),
     "R1": (20, 12.5, 0),
     "R2": (20, 6.5, 0),
     "D1": (10.5, 5.5, 270),
@@ -56,7 +54,11 @@ for map in [cubeDropoffLocation, markersLocationMap, markersImageClassificationL
 
 async def getMarkerLocations(robot, img_clf, robot_pose, cmap):
     markers = ["L1","U1","R1","R2","D1","D2"]
-    for marker in markersImageClassificationLocationMap:
+    i = 0
+    while len(markers) > 0:
+    # for marker in markersImageClassificationLocationMap:
+        marker = markers[i]
+        print("LOOKING FOR", marker)
         # get marker label location
         x,y,h = markersImageClassificationLocationMap[marker]
 
@@ -70,9 +72,13 @@ async def getMarkerLocations(robot, img_clf, robot_pose, cmap):
 
         # identify the marker image
         label = await getLabel(robot, img_clf)
-        if label == None: continue
-        markersMap[label] = marker
+        if label == None:
+            i = (i+1) % len(markers)
+            continue
 
+        del markers[i]
+        i = i % len(markers)
+        markersMap[label] = marker
 
     return markersMap
 
@@ -87,7 +93,7 @@ async def goToCubes(robot, markersMap, robot_pose, cmap):
     cmap.set_start(Node((robot_pose[0], robot_pose[1])))
 
     for i, location in enumerate(locations):
-        await rrt.pathPlan(robot, markersImageClassificationLocationMap[location], robot_pose, cmap)
+        await rrt.pathPlanCubes(robot, markersImageClassificationLocationMap[location], robot_pose, cmap)
         x,y,h = markersImageClassificationLocationMap[location]
 
         dAngle = diff_heading_deg(h, robot_pose[2])
@@ -176,5 +182,6 @@ async def getLabel(robot, img_clf):
         label = list(markersSet)[0]
     else:
         print("error: weird label")
-    await robot.say_text(label).wait_for_completed()
+        label = None
+    await robot.say_text("none" if label==None else label).wait_for_completed()
     return label

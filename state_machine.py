@@ -68,8 +68,8 @@ async def run(robot):
 	# better word for start position is "position delta", difference of actual location and robot's pose
 	# start_x,start_y,start_h = await localize(robot)
 
-	robot_pose = [152.4, 254, 0]
-	# robot_pose = [150, 250, 0]
+	# robot_pose = [152.4, 254, 0]
+	robot_pose = [150, 250, 0]
 
 
 	# start_x = 20 * 25 - robot.pose.position.x
@@ -83,31 +83,11 @@ async def run(robot):
 	# print("curr position: ", startPosition[0]+robot.pose.position.x, startPosition[1]+robot.pose.position.y, robot.pose.rotation.angle_z.degrees + startPosition[2])
 	# print("localization time: ", time.time()-startTime)
 
-
-	# await pathPlan(robot, (20*25,8*25), startPosition, cmap)
-	# return
-
-	# time.sleep(10)
-	# return
-	#
-	# # add grey square into path planning- DONE IN RRT.PY
-	#
-	# # store image marker locations
+	# store image marker locations
 	markersMap = await getMarkerLocations(robot, img_clf, robot_pose, cmap)
-	#
 
-	picked_up = set()
+	#picked_up = set()
 	# await goToCubes(robot, testMarkersMap, robot_pose, cmap, picked_up)
-
-
-	# '''
-	# for each cube:
-	# 	path plan to cube location
-	# 	if cube exists:
-	# 		lift cube
-	# 		path plan to corresponding image marker
-	# 		drop cube at location
-	# '''
 
 class RobotThread(threading.Thread):
 	"""Thread to run cozmo code separate from main thread
