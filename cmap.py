@@ -28,6 +28,7 @@ class CozMap:
             self._start = Node(tuple(config['start']))
             self._goals = [Node(tuple(coord)) for coord in config['goals']]
             self._obstacles = []
+            self._added_obstacles = []
             self._nodes = []  # node in RRT
             self._node_paths = []  # edge in RRT
             self._solved = False
@@ -152,6 +153,16 @@ class CozMap:
 
         self.lock.acquire()
         self._obstacles.append(nodes)
+        self._added_obstacles.append(nodes)
+        self.updated.set()
+        self.changes.append('obstacles')
+        self.lock.release()
+
+    def remove_added_obstacles(self):
+        self.lock.acquire()
+        for obstacle in self._added_obstacles:
+            self._obstacles.remove(obstacle)
+        self._added_obstacles = []
         self.updated.set()
         self.changes.append('obstacles')
         self.lock.release()

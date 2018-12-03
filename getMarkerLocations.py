@@ -5,7 +5,7 @@ import time
 import numpy as np
 from imgclassification import ImageClassifier
 import rrt
-import cmap
+from cmap import CozMap
 from utils import *
 
 
@@ -63,7 +63,7 @@ async def getMarkerLocations(robot, img_clf, robot_pose, cmap):
         x,y,h = markersImageClassificationLocationMap[marker]
 
         # go to markerLocation via RRT
-        await rrt.pathPlan(robot, (x,y), robot_pose, cmap, )
+        await rrt.pathPlan(robot, (x,y), robot_pose, cmap)
         dAngle = diff_heading_deg(h, robot_pose[2])
         await robot.turn_in_place(cozmo.util.degrees(dAngle)).wait_for_completed()
         robot_pose[2] += dAngle
@@ -83,16 +83,17 @@ async def getMarkerLocations(robot, img_clf, robot_pose, cmap):
     return markersMap
 
 
-async def goToCubes(robot, markersMap, robot_pose, cmap, picked_up):
+async def goToCubes(robot, markersMap, robot_pose, cmap):
     locations = ["L1", "U1", "D2", "D1"]
-    dests = ["place", "hands", "inspection", "order"]
-    angle = 300
+    dests = ["drone", "plane", "inspection", "place"]
+    angle = -50
     await robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
 
 
     cmap.set_start(Node((robot_pose[0], robot_pose[1])))
 
     for i, location in enumerate(locations):
+        cmap.remove_added_obstacles()
         await rrt.pathPlanCubes(robot, markersImageClassificationLocationMap[location], robot_pose, cmap)
         x,y,h = markersImageClassificationLocationMap[location]
 
@@ -104,11 +105,22 @@ async def goToCubes(robot, markersMap, robot_pose, cmap, picked_up):
         robot_pose[2] += angle + dAngle
         robot_pose[2] %= 360
 
-        last_pose = robot.pose
-        cube = await robot.world.wait_for_observed_light_cube(timeout=10)
-        if cube == None:
-            continue
+        try:
+            cube = await robot.world.wait_for_observed_light_cube(timeout=3)
+        except Exception as e:
+            cube = None
+
+        while cube is None:
+            await robot.turn_in_place(cozmo.util.degrees(-15)).wait_for_completed()
+            print("Turning ", -5)
+            robot_pose[2] -= 5
+            robot_pose[2] %= 360
+            try:
+                cube = await robot.world.wait_for_observed_light_cube(timeout=3)
+            except Exception as e:
+                cube = None
         print("Cozmo found a cube, and will now attempt to pick it up:")
+        last_pose = robot.pose
         await robot.pickup_object(cube, True, False, num_retries=3).wait_for_completed()
 
         # update pose after picking up cube
@@ -120,9 +132,14 @@ async def goToCubes(robot, markersMap, robot_pose, cmap, picked_up):
 
         destination = markersMap[dests[i]]
         # start = robot.pose.position.x, robot.pose.position.y, -robot.pose.rotation.angle_z.degrees
-        await rrt.pathPlan(robot, cubeDropoffLocation[destination], robot_pose, cmap)
+        last_pose = await rrt.pathPlanCubes(robot, cubeDropoffLocation[destination], robot_pose, cmap)
 
         await robot.place_object_on_ground_here(cube, False, 2).wait_for_completed()
+        curr_pose = robot.pose
+        robot_pose[0] += curr_pose.position.x-last_pose.position.x
+        robot_pose[1] += curr_pose.position.y-last_pose.position.y
+        robot_pose[2] += curr_pose.rotation.angle_z.degrees-last_pose.rotation.angle_z.degrees
+        robot_pose[2] %= 360
 
 
 async def getLabel(robot, img_clf):

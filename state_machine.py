@@ -34,12 +34,12 @@ cornerLocations = {
 scale = 25
 
 testMarkersMap = {
-	"plane": "L1",
-	"order": "U1",
-	"drone" : "R1",
-	"hands": "R2",
-	"place": "D2",
-	"inspection": "D1"
+	"plane": "U1",
+	"order": "D1",
+	"drone" : "R2",
+	"hands": "R1",
+	"place": "L1",
+	"inspection": "D2"
 }
 
 for map in [cubeDropoffLocation, cornerLocations]:
@@ -52,6 +52,16 @@ for map in [cubeDropoffLocation, cornerLocations]:
 cmap = CozMap("emptygrid.json", node_generator)
 
 async def run(robot):
+	from cozmo.util import distance_mm, speed_mmps, degrees
+	# print(robot.pose.position.x, robot.pose.position.y, robot.pose.rotation.angle_z.degrees)
+	# await robot.drive_straight(distance_mm(400), speed_mmps(80), should_play_anim=False).wait_for_completed()
+	# await robot.turn_in_place(cozmo.util.degrees(-90)).wait_for_completed()
+	# print(robot.pose.position.x, robot.pose.position.y, robot.pose.rotation.angle_z.degrees)
+	# await robot.turn_in_place(cozmo.util.degrees(-90)).wait_for_completed()
+	# print(robot.pose.position.x, robot.pose.position.y, robot.pose.rotation.angle_z.degrees)
+	# await robot.drive_straight(distance_mm(100), speed_mmps(80), should_play_anim=False).wait_for_completed()
+	# print(robot.pose.position.x, robot.pose.position.y, robot.pose.rotation.angle_z.degrees)
+	
 	global cubeDropoffLocation
 	startTime = time.time()
 	# train images to create image classifier
@@ -67,7 +77,14 @@ async def run(robot):
 
 	# localize
 	# better word for start position is "position delta", difference of actual location and robot's pose
-	# start_x,start_y,start_h = await localize(robot)
+	start_x,start_y,start_h = await localize(robot)
+
+	print("Start_H", start_h)
+
+	start_h -= 360 
+	start_h % 360
+
+	await pathPlan(robot, (150,250), [start_x, start_y, start_h], cmap)
 
 	# robot_pose = [152.4, 254, 0]
 	robot_pose = [150, 250, 0]
@@ -85,10 +102,10 @@ async def run(robot):
 	# print("localization time: ", time.time()-startTime)
 
 	# store image marker locations
+	cmap.set_start(Node((start_x, start_y)))
 	markersMap = await getMarkerLocations(robot, img_clf, robot_pose, cmap)
 
-	# picked_up = set()
-	# await goToCubes(robot, testMarkersMap, robot_pose, cmap, picked_up)
+	#await goToCubes(robot, markersMap, robot_pose, cmap)
 
 class RobotThread(threading.Thread):
 	"""Thread to run cozmo code separate from main thread
