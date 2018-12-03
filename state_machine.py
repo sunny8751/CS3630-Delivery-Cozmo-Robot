@@ -33,6 +33,15 @@ cornerLocations = {
 
 scale = 25
 
+testMarkersMap = {
+	"plane": "L1",
+	"order": "U1",
+	"drone" : "R1",
+	"hands": "R2",
+	"place": "D2",
+	"inspection": "D1"
+}
+
 for map in [cubeDropoffLocation, cornerLocations]:
     for key,value in map.items():
         if len(value) == 3:
@@ -80,9 +89,9 @@ async def run(robot):
 	# # add grey square into path planning- DONE IN RRT.PY
 	#
 	# # store image marker locations
-	markersMap = await getMarkerLocations(robot, img_clf, startPosition, cmap)
+	#markersMap = await getMarkerLocations(robot, img_clf, startPosition, cmap)
 	#
-	await goToCubes(robot, markersMap, startPosition, cmap)
+	await goToCubes(robot, testMarkersMap, startPosition, cmap)
 	# '''
 	# for each cube:
 	# 	path plan to cube location

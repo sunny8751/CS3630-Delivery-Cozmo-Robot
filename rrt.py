@@ -262,6 +262,7 @@ async def detect_cube_and_update_cmap(robot, marked, cozmo_pos):
         object_angle = obj.pose.rotation.angle_z.radians
 
         # The goal cube is defined as robot.world.light_cubes[cozmo.objects.LightCube1Id].object_id
+        '''
         if robot.world.light_cubes[cozmo.objects.LightCube1Id].object_id == obj.object_id:
 
             # Calculate the approach position of the object
@@ -275,7 +276,7 @@ async def detect_cube_and_update_cmap(robot, marked, cozmo_pos):
                 cmap.clear_goals()
                 cmap.add_goal(goal_pos)
                 goal_center = object_pos
-
+        '''
         # Define an obstacle by its four corners in clockwise order
         obstacle_nodes = []
         obstacle_nodes.append(get_global_node(object_angle, object_pos, Node((cube_padding, cube_padding))))
@@ -394,12 +395,12 @@ async def driveAlongPath(robot, path, startPosition, cmap):
 
     marked = {}
     # prev_pos = path[0]
-
     # print("length to path is",len(path))
     for node in path:
 
         # print(robot.pose.position.x, robot.pose.position.y)
         curr_pos = Node((robot.pose.position.x+startPosition[0], robot.pose.position.y+startPosition[1]))
+        detect_cube_and_update_cmap(robot, marked, curr_pos)
         print("RRT POS")
         # print(prev_pos.x, prev_pos.y)
         print("Actual Position")
@@ -430,12 +431,12 @@ async def driveAlongPath(robot, path, startPosition, cmap):
         dx, dy = node.x - curr_pos.x, node.y - curr_pos.y
         dist = np.sqrt(dx ** 2 + dy ** 2)
 
-        time.sleep(1)
+        #time.sleep(1)
         await robot.drive_straight(distance_mm(dist), speed_mmps(60), should_play_anim=False).wait_for_completed()
 
         curr_pos = Node((robot.pose.position.x + startPosition[0], robot.pose.position.y + startPosition[1]))
         cmap.set_start(curr_pos)
-        time.sleep(1)
+        #time.sleep(1)
         #await robot.go_to_pose(cozmo.util.pose_z_angle(node.x, node.y, 0, angle_z = cozmo.util.Angle(dAngle))).wait_for_completed()
         # prev_pos = node
 

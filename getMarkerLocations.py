@@ -5,6 +5,8 @@ import time
 import numpy as np
 from imgclassification import ImageClassifier
 import rrt
+import cmap
+from utils import Node
 
 SCALE = 25
 
@@ -72,21 +74,29 @@ async def getMarkerLocations(robot, img_clf, startPosition, cmap):
 
 async def goToCubes(robot, markersMap, startPosition, cmap):
     locations = ["L1", "U1", "D2", "D1"]
-    dests = ["drone", "plane", "", "inspector"]
-    angle = 270
+    dests = ["drone", "plane", "place", "inspection"]
+    angle = 300
+    #robot.set_heading
+
+
+    cmap.set_start(Node((startPosition[0]+robot.pose.position.x, startPosition[1]+robot.pose.position.y)))
 
     for i, location in enumerate(locations):
         await rrt.pathPlan(robot, markersImageClassificationLocationMap[location], startPosition, cmap)
-        robot.turn_in_place(cozmo.util.degrees(angle))
-        cube = robot.world.wait_for_observed_light_cube(timeout=5)
+        x,y,h = markersImageClassificationLocationMap[location]
+        dAngle = (h - robot.pose.rotation.angle_z.degrees - startPosition[2]) % 360
+        if dAngle >= 180: dAngle = -(360 - dAngle)
+        await robot.turn_in_place(cozmo.util.degrees(dAngle)).wait_for_completed()
+        await robot.turn_in_place(cozmo.util.degrees(angle)).wait_for_completed()
+        cube = await robot.world.wait_for_observed_light_cube(timeout=10)
         if cube == None:
             continue
         print("Cozmo found a cube, and will now attempt to pick it up it:")
-        pickupCube = await robot.pickup_object(cube, True, False, num_retries=1)
-        pickupCube.wait_for_completed()
+        await robot.pickup_object(cube, True, False, num_retries=3).wait_for_completed()
         destination = markersMap[dests[i]]
-        await rrt.pathPlan(robot, cubeDropoffLocation[destination])
-        robot.place_object_on_ground_here(cube, False, 2).wait_for_completed()
+        # start = robot.pose.position.x, robot.pose.position.y, -robot.pose.rotation.angle_z.degrees
+        await rrt.pathPlan(robot, cubeDropoffLocation[destination], startPosition, cmap)
+        await robot.place_object_on_ground_here(cube, False, 2).wait_for_completed()
 
 
 async def getLabel(robot, img_clf):
