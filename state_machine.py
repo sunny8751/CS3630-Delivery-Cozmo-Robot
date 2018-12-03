@@ -96,8 +96,8 @@ async def run(robot):
 	markersMap = await getMarkerLocations(robot, img_clf, robot_pose, cmap)
 	#
 
-
-	# await goToCubes(robot, testMarkersMap, startPosition, cmap)
+	picked_up = set()
+	# await goToCubes(robot, testMarkersMap, robot_pose, cmap, picked_up)
 
 
 	# '''

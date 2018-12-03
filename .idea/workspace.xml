@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b56cf1e8-3d39-49e4-b099-475f5530f574" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change beforePath="$PROJECT_DIR$/getMarkerLocations.py" afterPath="$PROJECT_DIR$/getMarkerLocations.py" />
       <change beforePath="$PROJECT_DIR$/rrt.py" afterPath="$PROJECT_DIR$/rrt.py" />
       <change beforePath="$PROJECT_DIR$/state_machine.py" afterPath="$PROJECT_DIR$/state_machine.py" />
@@ -14,15 +15,15 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/CS3630_Delivery_Cozmo_Robot$state_machine.coverage" NAME="state_machine Coverage Results" MODIFIED="1543810848189" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/CS3630_Delivery_Cozmo_Robot$state_machine.coverage" NAME="state_machine Coverage Results" MODIFIED="1543814835939" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file leaf-file-name="go_to_goal.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/go_to_goal.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="231">
-              <caret line="231" column="0" lean-forward="false" selection-start-line="231" selection-start-column="0" selection-end-line="231" selection-end-column="0" />
+            <state relative-caret-position="396">
+              <caret line="49" column="0" lean-forward="false" selection-start-line="49" selection-start-column="0" selection-end-line="49" selection-end-column="0" />
               <folding>
                 <element signature="e#292#317#0" expanded="true" />
               </folding>
@@ -33,18 +34,18 @@
       <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/utils.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1365">
-              <caret line="92" column="8" lean-forward="false" selection-start-line="92" selection-start-column="8" selection-end-line="92" selection-end-column="8" />
+            <state relative-caret-position="226">
+              <caret line="99" column="0" lean-forward="false" selection-start-line="99" selection-start-column="0" selection-end-line="99" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="state_machine.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="state_machine.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/state_machine.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="234">
-              <caret line="44" column="34" lean-forward="false" selection-start-line="44" selection-start-column="34" selection-end-line="44" selection-end-column="34" />
+            <state relative-caret-position="216">
+              <caret line="95" column="0" lean-forward="false" selection-start-line="95" selection-start-column="0" selection-end-line="95" selection-end-column="0" />
               <folding>
                 <element signature="e#0#16#0" expanded="true" />
               </folding>
@@ -52,11 +53,21 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="gui.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/gui.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="216">
+              <caret line="22" column="59" lean-forward="false" selection-start-line="22" selection-start-column="59" selection-end-line="22" selection-end-column="59" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="rrt.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/rrt.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="231">
-              <caret line="326" column="32" lean-forward="false" selection-start-line="326" selection-start-column="32" selection-end-line="326" selection-end-column="32" />
+            <state relative-caret-position="560">
+              <caret line="311" column="59" lean-forward="false" selection-start-line="311" selection-start-column="59" selection-end-line="311" selection-end-column="59" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
               </folding>
@@ -67,8 +78,8 @@
       <file leaf-file-name="cmap.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/cmap.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1366">
-              <caret line="114" column="45" lean-forward="false" selection-start-line="114" selection-start-column="40" selection-end-line="114" selection-end-column="45" />
+            <state relative-caret-position="341">
+              <caret line="153" column="36" lean-forward="false" selection-start-line="153" selection-start-column="31" selection-end-line="153" selection-end-column="36" />
               <folding />
             </state>
           </provider>
@@ -86,11 +97,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="getMarkerLocations.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="getMarkerLocations.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/getMarkerLocations.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-51">
-              <caret line="11" column="12" lean-forward="false" selection-start-line="11" selection-start-column="12" selection-end-line="11" selection-end-column="12" />
+            <state relative-caret-position="293">
+              <caret line="139" column="0" lean-forward="true" selection-start-line="139" selection-start-column="0" selection-end-line="139" selection-end-column="0" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -114,10 +125,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>25</find>
-      <find>global cmap</find>
-      <find>lookA</find>
-      <find>turn_in</find>
       <find>pathP</find>
       <find>*</find>
       <find>idle</find>
@@ -138,8 +145,16 @@
       <find>localize</find>
       <find>scale</find>
       <find>imageclass</find>
-      <find>driveAlong</find>
       <find>robot.pose</find>
+      <find>rotation.</find>
+      <find>update_cmap</find>
+      <find>detect_cube_and_update_cmap</find>
+      <find>driveAlong</find>
+      <find>driveAlongPath</find>
+      <find>reset</find>
+      <find>get_item</find>
+      <find>pathPlan</find>
+      <find>goal_center</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -150,8 +165,9 @@
       <list>
         <option value="$PROJECT_DIR$/imgclassification.py" />
         <option value="$PROJECT_DIR$/go_to_goal.py" />
-        <option value="$PROJECT_DIR$/rrt.py" />
         <option value="$PROJECT_DIR$/state_machine.py" />
+        <option value="$PROJECT_DIR$/utils.py" />
+        <option value="$PROJECT_DIR$/rrt.py" />
         <option value="$PROJECT_DIR$/getMarkerLocations.py" />
       </list>
     </option>
@@ -272,6 +288,7 @@
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="SciView" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Concurrent Activities Diagram" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32938644" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39935413" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -281,7 +298,6 @@
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Concurrent Activities Diagram" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32938644" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -686,42 +702,52 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/go_to_goal.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="231">
-          <caret line="231" column="0" lean-forward="false" selection-start-line="231" selection-start-column="0" selection-end-line="231" selection-end-column="0" />
+        <state relative-caret-position="396">
+          <caret line="49" column="0" lean-forward="false" selection-start-line="49" selection-start-column="0" selection-end-line="49" selection-end-column="0" />
           <folding>
             <element signature="e#292#317#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/gui.py">
+    <entry file="file://$PROJECT_DIR$/cmap.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        <state relative-caret-position="341">
+          <caret line="153" column="36" lean-forward="false" selection-start-line="153" selection-start-column="31" selection-end-line="153" selection-end-column="36" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cmap.py">
+    <entry file="file://$PROJECT_DIR$/gui.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1366">
-          <caret line="114" column="45" lean-forward="false" selection-start-line="114" selection-start-column="40" selection-end-line="114" selection-end-column="45" />
+        <state relative-caret-position="216">
+          <caret line="22" column="59" lean-forward="false" selection-start-line="22" selection-start-column="59" selection-end-line="22" selection-end-column="59" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/state_machine.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="216">
+          <caret line="95" column="0" lean-forward="false" selection-start-line="95" selection-start-column="0" selection-end-line="95" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#16#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1365">
-          <caret line="92" column="8" lean-forward="false" selection-start-line="92" selection-start-column="8" selection-end-line="92" selection-end-column="8" />
+        <state relative-caret-position="226">
+          <caret line="99" column="0" lean-forward="false" selection-start-line="99" selection-start-column="0" selection-end-line="99" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/rrt.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="231">
-          <caret line="326" column="32" lean-forward="false" selection-start-line="326" selection-start-column="32" selection-end-line="326" selection-end-column="32" />
+        <state relative-caret-position="560">
+          <caret line="311" column="59" lean-forward="false" selection-start-line="311" selection-start-column="59" selection-end-line="311" selection-end-column="59" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>
@@ -730,20 +756,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/getMarkerLocations.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-51">
-          <caret line="11" column="12" lean-forward="false" selection-start-line="11" selection-start-column="12" selection-end-line="11" selection-end-column="12" />
+        <state relative-caret-position="293">
+          <caret line="139" column="0" lean-forward="true" selection-start-line="139" selection-start-column="0" selection-end-line="139" selection-end-column="0" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/state_machine.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="234">
-          <caret line="44" column="34" lean-forward="false" selection-start-line="44" selection-start-column="34" selection-end-line="44" selection-end-column="34" />
-          <folding>
-            <element signature="e#0#16#0" expanded="true" />
           </folding>
         </state>
       </provider>

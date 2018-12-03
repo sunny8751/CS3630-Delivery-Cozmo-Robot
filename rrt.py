@@ -123,12 +123,12 @@ def get_global_node(local_angle, local_origin, node):
     new_x = (x * math.cos(local_angle)) - (y * math.sin(local_angle)) + local_origin.x
     new_y = (y * math.cos(local_angle)) + (x * math.sin(local_angle)) + local_origin.y
 
-    new_node = Node(new_x, new_y)
+    new_node = Node((new_x, new_y))
 
     return new_node
 
 
-async def detect_cube_and_update_cmap(robot, marked, cozmo_pos):
+async def detect_cube_and_update_cmap(robot, marked, cozmo_pos, cmap):
     """Helper function used to detect obstacle cubes and the goal cube.
        1. When a valid goal cube is detected, old goals in cmap will be cleared and a new goal corresponding to the approach position of the cube will be added.
        2. Approach position is used because we don't want the robot to drive to the center position of the goal cube.
@@ -146,7 +146,6 @@ async def detect_cube_and_update_cmap(robot, marked, cozmo_pos):
         update_cmap -- when a new obstacle or a new valid goal is detected, update_cmap will set to True
         goal_center -- when a new valid goal is added, the center of the goal cube will be returned
     """
-    global cmap
 
     # Padding of objects and the robot for C-Space
     cube_padding = 60.
@@ -163,7 +162,7 @@ async def detect_cube_and_update_cmap(robot, marked, cozmo_pos):
 
         if obj.object_id in marked:
             continue
-
+        print("Saw obstacle")
         # Calculate the object pose in G_Arena
         # obj.pose is the object's pose in G_Robot
         # We need the object's pose in G_Arena (object_pos, object_angle)
@@ -195,6 +194,7 @@ async def detect_cube_and_update_cmap(robot, marked, cozmo_pos):
         obstacle_nodes.append(get_global_node(object_angle, object_pos, Node((cube_padding, -cube_padding))))
         obstacle_nodes.append(get_global_node(object_angle, object_pos, Node((-cube_padding, -cube_padding))))
         obstacle_nodes.append(get_global_node(object_angle, object_pos, Node((-cube_padding, cube_padding))))
+        print([(node.x,node.y) for node in obstacle_nodes])
         cmap.add_obstacle(obstacle_nodes)
         marked[obj.object_id] = obj
         update_cmap = True
@@ -303,42 +303,50 @@ async def driveAlongPath(robot, path, robot_pose, cmap):
     marked = {}
     # prev_pos = path[0]
     # print("length to path is",len(path))
-    for node in path:
+    redoRRT = True
+    while redoRRT:
+        redoRRT = False
+        for node in path:
 
-        # print(robot.pose.position.x, robot.pose.position.y)
-        curr_pos = Node((robot_pose[0], robot_pose[1]))
-        # TODO: FIX THIS SHIT
-        detect_cube_and_update_cmap(robot, marked, curr_pos)
+            # print(robot.pose.position.x, robot.pose.position.y)
+            curr_pos = Node((robot_pose[0], robot_pose[1]))
+            # TODO: FIX THIS SHIT
+            update_cmap, goal_center = await detect_cube_and_update_cmap(robot, marked, curr_pos, cmap)
+            if update_cmap:
+                print("REDOING RRT BECAUSE IT SAW A CUBE")
+                cmap.reset()
+                cmap.set_start(curr_pos)
+                RRT(cmap, cmap.get_start())
+                redoRRT = True
+                break
 
+            cmap.set_start(curr_pos)
 
+            dx,dy = node.x-curr_pos.x, node.y-curr_pos.y
+            targetAngle = np.degrees(np.arctan2(dy,dx))
+            print("Dx: " , dx)
+            print("Dy: " , dy)
+            print("angle: " , targetAngle)
 
-        cmap.set_start(curr_pos)
+            #dAngle = (angle-robot.pose.rotation.angle_z.degrees - startPosition[2])%360
+            # if dAngle >= 180: dAngle = -(360-dAngle)
+            dAngle = diff_heading_deg(targetAngle, robot_pose[2])
+            # print("Distance: ", dist, "Dangle: ", dAngle)
+            await robot.turn_in_place(degrees(dAngle)).wait_for_completed()
+            robot_pose[2] += dAngle
 
-        dx,dy = node.x-curr_pos.x, node.y-curr_pos.y
-        targetAngle = np.degrees(np.arctan2(dy,dx))
-        print("Dx: " , dx)
-        print("Dy: " , dy)
-        print("angle: " , targetAngle)
+            dist = np.sqrt(dx ** 2 + dy ** 2)
 
-        #dAngle = (angle-robot.pose.rotation.angle_z.degrees - startPosition[2])%360
-        # if dAngle >= 180: dAngle = -(360-dAngle)
-        dAngle = diff_heading_deg(targetAngle, robot_pose[2])
-        # print("Distance: ", dist, "Dangle: ", dAngle)
-        await robot.turn_in_place(degrees(dAngle)).wait_for_completed()
-        robot_pose[2] += dAngle
+            #time.sleep(1)
+            await robot.drive_straight(distance_mm(dist), speed_mmps(40), should_play_anim=False).wait_for_completed()
+            robot_pose[0] += dx
+            robot_pose[1] += dy
 
-        dist = np.sqrt(dx ** 2 + dy ** 2)
-
-        #time.sleep(1)
-        await robot.drive_straight(distance_mm(dist), speed_mmps(40), should_play_anim=False).wait_for_completed()
-        robot_pose[0] += dx
-        robot_pose[1] += dy
-
-        curr_pos = Node((robot_pose[0], robot_pose[1]))
-        cmap.set_start(curr_pos)
-        #time.sleep(1)
-        #await robot.go_to_pose(cozmo.util.pose_z_angle(node.x, node.y, 0, angle_z = cozmo.util.Angle(dAngle))).wait_for_completed()
-        # prev_pos = node
+            curr_pos = Node((robot_pose[0], robot_pose[1]))
+            cmap.set_start(curr_pos)
+            #time.sleep(1)
+            #await robot.go_to_pose(cozmo.util.pose_z_angle(node.x, node.y, 0, angle_z = cozmo.util.Angle(dAngle))).wait_for_completed()
+            # prev_pos = node
 
     curr_pos = Node((robot_pose[0], robot_pose[1]))
     cmap.set_start(curr_pos)

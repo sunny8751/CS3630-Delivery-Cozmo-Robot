@@ -55,12 +55,13 @@ for map in [cubeDropoffLocation, markersLocationMap, markersImageClassificationL
             map[key] = (value[0]*scale, value[1]*scale)
 
 async def getMarkerLocations(robot, img_clf, robot_pose, cmap):
+    markers = ["L1","U1","R1","R2","D1","D2"]
     for marker in markersImageClassificationLocationMap:
         # get marker label location
         x,y,h = markersImageClassificationLocationMap[marker]
 
         # go to markerLocation via RRT
-        await rrt.pathPlan(robot, (x,y), robot_pose, cmap)
+        await rrt.pathPlan(robot, (x,y), robot_pose, cmap, )
         dAngle = diff_heading_deg(h, robot_pose[2])
         await robot.turn_in_place(cozmo.util.degrees(dAngle)).wait_for_completed()
         robot_pose[2] += dAngle
@@ -68,35 +69,53 @@ async def getMarkerLocations(robot, img_clf, robot_pose, cmap):
         print("Marker Path Planning complete " +  marker)
 
         # identify the marker image
-        markersMap[await getLabel(robot, img_clf)] = marker
+        label = await getLabel(robot, img_clf)
+        if label == None: continue
+        markersMap[label] = marker
+
 
     return markersMap
 
 
-async def goToCubes(robot, markersMap, startPosition, cmap):
+async def goToCubes(robot, markersMap, robot_pose, cmap):
     locations = ["L1", "U1", "D2", "D1"]
     dests = ["drone", "plane", "place", "inspection"]
     angle = 300
-    #robot.set_heading
+    await robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
 
 
-    cmap.set_start(Node((startPosition[0]+robot.pose.position.x, startPosition[1]+robot.pose.position.y)))
+    cmap.set_start(Node((robot_pose[0], robot_pose[1])))
 
     for i, location in enumerate(locations):
-        await rrt.pathPlan(robot, markersImageClassificationLocationMap[location], startPosition, cmap)
+        await rrt.pathPlan(robot, markersImageClassificationLocationMap[location], robot_pose, cmap)
         x,y,h = markersImageClassificationLocationMap[location]
-        dAngle = (h - robot.pose.rotation.angle_z.degrees - startPosition[2]) % 360
-        if dAngle >= 180: dAngle = -(360 - dAngle)
+
+        dAngle = diff_heading_deg(h, robot_pose[2])
+
         await robot.turn_in_place(cozmo.util.degrees(dAngle)).wait_for_completed()
         await robot.turn_in_place(cozmo.util.degrees(angle)).wait_for_completed()
+
+        robot_pose[2] += angle + dAngle
+        robot_pose[2] %= 360
+
+        last_pose = robot.pose
         cube = await robot.world.wait_for_observed_light_cube(timeout=10)
         if cube == None:
             continue
         print("Cozmo found a cube, and will now attempt to pick it up it:")
         await robot.pickup_object(cube, True, False, num_retries=3).wait_for_completed()
+
+        # update pose after picking up cube
+        curr_pose = robot.pose
+        robot_pose[0] += curr_pose.position.x-last_pose.position.x
+        robot_pose[1] += curr_pose.position.y-last_pose.position.y
+        robot_pose[2] += curr_pose.rotation.angle_z.degrees-last_pose.rotation.angle_z.degrees
+        robot_pose[2] %= 360
+
         destination = markersMap[dests[i]]
         # start = robot.pose.position.x, robot.pose.position.y, -robot.pose.rotation.angle_z.degrees
-        await rrt.pathPlan(robot, cubeDropoffLocation[destination], startPosition, cmap)
+        await rrt.pathPlan(robot, cubeDropoffLocation[destination], robot_pose, cmap)
+
         await robot.place_object_on_ground_here(cube, False, 2).wait_for_completed()
 
 
@@ -119,8 +138,8 @@ async def getLabel(robot, img_clf):
         new_image = latest_image.raw_image
         if not new_image: continue
 
-        timestamp = datetime.datetime.now().strftime("%dT%H%M%S%f")
-        new_image.save("./test_imgs/" + timestamp + ".bmp")
+        # timestamp = datetime.datetime.now().strftime("%dT%H%M%S%f")
+        # new_image.save("./test_imgs/" + timestamp + ".bmp")
 
         data_raw.append(np.array(new_image))
         angle += (MAX_HEAD_ANGLE - MIN_HEAD_ANGLE) / 5
