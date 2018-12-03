@@ -105,94 +105,6 @@ def RRT(cmap, start):
         print("Please try again :-(")
 
 
-async def CozmoPlanning(robot: cozmo.robot.Robot):
-    # Allows access to map and stopevent, which can be used to see if the GUI
-    # has been closed by checking stopevent.is_set()
-    global cmap, stopevent
-    from cozmo.util import degrees, distance_mm, speed_mmps, Pose, Angle
-
-    ########################################################################
-    # TODO: please enter your code below.
-    # Description of function provided in instructions
-    await robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
-
-    width, height = cmap.get_size()
-    scale = 25.4
-    x,y = 6*scale,10*scale
-    distance_to_center = 6 * scale
-
-    marked = {}
-    starting_pos = Node([x,y])
-    print("start pose",x,y)
-    cmap.set_start(starting_pos)
-    last_pose = robot.pose
-    update_goal = False
-    offsetx,offsety = robot.pose.position.x, robot.pose.position.y
-    print((robot.pose.position.x, robot.pose.position.y))
-
-    while True:
-        curr_pos = Node((starting_pos.x + robot.pose.position.x, starting_pos.y + robot.pose.position.y))
-        cmap.set_start(curr_pos)
-
-        update_goal, goal_center = await detect_cube_and_update_cmap(robot, marked, curr_pos)
-        print(update_goal,goal_center)
-        if update_goal:
-            cmap.reset()
-
-        if goal_center is not None:
-            print("Saw cube")
-            RRT(cmap, cmap.get_start())
-
-        if cmap.is_solved():
-            print("going towards goal location")
-            path = cmap.get_smooth_path()
-            breakToGoal = False
-            print(len(path))
-            for node in path:
-                curr_pos = Node((starting_pos.x + robot.pose.position.x, starting_pos.y + robot.pose.position.y))
-                cmap.set_start(curr_pos)
-
-                dx,dy = node.x-curr_pos.x, node.y-curr_pos.y
-                dist = np.sqrt(dx**2+dy**2)
-                angle = np.arctan2(dy,dx) * 180 / np.pi
-                dAngle = (angle-robot.pose.rotation.angle_z.degrees)%360
-                if dAngle >= 180: dAngle = -(360-dAngle)
-                print(dAngle,dist)
-
-                await robot.turn_in_place(degrees(dAngle)).wait_for_completed()
-
-                d = 0
-                while d < dist:
-                    curr_pos = Node((starting_pos.x + robot.pose.position.x, starting_pos.y + robot.pose.position.y))
-                    cmap.set_start(curr_pos)
-                    breakToGoal, goal_center = await detect_cube_and_update_cmap(robot, marked, curr_pos)
-                    if breakToGoal:
-                        cmap.reset()
-                        RRT(cmap, cmap.get_start())
-                        break
-
-                    distToMove = min(50, dist-d)
-                    d += distToMove
-                    await robot.drive_straight(distance_mm(distToMove), speed_mmps(60), should_play_anim=False).wait_for_completed()
-
-                if breakToGoal: break
-
-            if breakToGoal: continue
-            return
-        else:
-            print("Can't see cube")
-            #try to drive to center of the arena to look for the cube
-            print((width/2-curr_pos.x, height/2-curr_pos.y))
-            await robot.go_to_pose(Pose(width/2-curr_pos.x, height/2-curr_pos.y, 0, angle_z=Angle(0))).wait_for_completed()
-            # await robot.drive_straight(cozmo.util.distance_mm(125), cozmo.util.speed_mmps(50)).wait_for_completed()
-            while goal_center is None:
-                await robot.turn_in_place(cozmo.util.degrees(-30)).wait_for_completed()
-                curr_pos = Node((starting_pos.x + robot.pose.position.x, starting_pos.y + robot.pose.position.y))
-                cmap.set_start(curr_pos)
-                update_goal, goal_center = await detect_cube_and_update_cmap(robot, marked, curr_pos)
-        #print("Found after rotating")
-        RRT(cmap, cmap.get_start())
-
 def get_global_node(local_angle, local_origin, node):
     """Helper function: Transform the node's position (x,y) from local coordinate frame specified by local_origin and local_angle to global coordinate frame.
                         This function is used in detect_cube_and_update_cmap()
@@ -359,17 +271,12 @@ class RRTThread(threading.Thread):
 
 
 # start is a tuple (x,y) in mm
-async def pathPlan(robot, goal, startPosition, cmap):
+async def pathPlan(robot, goal, robot_pose, cmap):
     # cmap = CozMap("emptygrid.json", node_generator)
     cmap.reset()
     cmap.clear_goals()
-    startX,startY,startH = startPosition
-    print(robot.pose.position)
-    print((robot.pose.position.x, robot.pose.position.y))
-    print(startPosition)
-    print((robot.pose.position.x+startX, robot.pose.position.y+startY))
 
-    cmap.set_start(Node((robot.pose.position.x+startX, robot.pose.position.y+startY)))
+    cmap.set_start(Node((robot_pose[0], robot_pose[1])))
     cmap.add_goal(Node(goal))
 
     # entered middle obstancle square in emptygrid.json
@@ -377,11 +284,11 @@ async def pathPlan(robot, goal, startPosition, cmap):
     RRT(cmap, cmap.get_start())
     if (cmap.is_solution_valid()):
         path = cmap.get_smooth_path()
-        await driveAlongPath(robot, path, startPosition, cmap)
+        await driveAlongPath(robot, path, robot_pose, cmap)
     else:
         print("CANNOT RRT TO MARKER!!!")
 
-async def driveAlongPath(robot, path, startPosition, cmap):
+async def driveAlongPath(robot, path, robot_pose, cmap):
     # Allows access to map and stopevent, which can be used to see if the GUI
     # has been closed by checking stopevent.is_set()
     global stopevent
@@ -399,48 +306,41 @@ async def driveAlongPath(robot, path, startPosition, cmap):
     for node in path:
 
         # print(robot.pose.position.x, robot.pose.position.y)
-        curr_pos = Node((robot.pose.position.x+startPosition[0], robot.pose.position.y+startPosition[1]))
+        curr_pos = Node((robot_pose[0], robot_pose[1]))
+        # TODO: FIX THIS SHIT
         detect_cube_and_update_cmap(robot, marked, curr_pos)
-        print("RRT POS")
-        # print(prev_pos.x, prev_pos.y)
-        print("Actual Position")
-        print(robot.pose.position.x+startPosition[0], robot.pose.position.y+startPosition[1],robot.pose.rotation.angle_z.degrees + startPosition[2])
-        #curr_pos = node
-        #print("Drive along path: ", curr_pos.x, curr_pos.y, robot.pose.rotation.angle_z.degrees + startPosition[2])
-        #print("Driving to: ", node.x, node.y)
-        print()
 
 
-        cmap.set_start(Node((robot.pose.position.x + startPosition[0], robot.pose.position.y + startPosition[1])))
+
+        cmap.set_start(curr_pos)
 
         dx,dy = node.x-curr_pos.x, node.y-curr_pos.y
-        dist = np.sqrt(dx**2+dy**2)
-        angle = np.degrees(np.arctan2(dy,dx))
+        targetAngle = np.degrees(np.arctan2(dy,dx))
         print("Dx: " , dx)
         print("Dy: " , dy)
-        print("angle: " , angle)
+        print("angle: " , targetAngle)
 
         #dAngle = (angle-robot.pose.rotation.angle_z.degrees - startPosition[2])%360
         # if dAngle >= 180: dAngle = -(360-dAngle)
-        dAngle = diff_heading_deg(angle, robot.pose.rotation.angle_z.degrees + startPosition[2])
-        print("Distance: ", dist, "Dangle: ", dAngle)
+        dAngle = diff_heading_deg(targetAngle, robot_pose[2])
+        # print("Distance: ", dist, "Dangle: ", dAngle)
         await robot.turn_in_place(degrees(dAngle)).wait_for_completed()
+        robot_pose[2] += dAngle
 
-        curr_pos = Node((robot.pose.position.x+startPosition[0], robot.pose.position.y+startPosition[1]))
-        cmap.set_start(curr_pos)
-        dx, dy = node.x - curr_pos.x, node.y - curr_pos.y
         dist = np.sqrt(dx ** 2 + dy ** 2)
 
         #time.sleep(1)
-        await robot.drive_straight(distance_mm(dist), speed_mmps(60), should_play_anim=False).wait_for_completed()
+        await robot.drive_straight(distance_mm(dist), speed_mmps(40), should_play_anim=False).wait_for_completed()
+        robot_pose[0] += dx
+        robot_pose[1] += dy
 
-        curr_pos = Node((robot.pose.position.x + startPosition[0], robot.pose.position.y + startPosition[1]))
+        curr_pos = Node((robot_pose[0], robot_pose[1]))
         cmap.set_start(curr_pos)
         #time.sleep(1)
         #await robot.go_to_pose(cozmo.util.pose_z_angle(node.x, node.y, 0, angle_z = cozmo.util.Angle(dAngle))).wait_for_completed()
         # prev_pos = node
 
-    curr_pos = Node((robot.pose.position.x + startPosition[0], robot.pose.position.y + startPosition[1]))
+    curr_pos = Node((robot_pose[0], robot_pose[1]))
     cmap.set_start(curr_pos)
 
 if __name__ == '__main__':

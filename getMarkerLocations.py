@@ -6,9 +6,10 @@ import numpy as np
 from imgclassification import ImageClassifier
 import rrt
 import cmap
-from utils import Node
+from utils import *
 
-SCALE = 25
+
+SCALE = 25.4
 
 # marker id: type (string)
 markersMap = {
@@ -53,16 +54,16 @@ for map in [cubeDropoffLocation, markersLocationMap, markersImageClassificationL
         else:
             map[key] = (value[0]*scale, value[1]*scale)
 
-async def getMarkerLocations(robot, img_clf, startPosition, cmap):
+async def getMarkerLocations(robot, img_clf, robot_pose, cmap):
     for marker in markersImageClassificationLocationMap:
         # get marker label location
         x,y,h = markersImageClassificationLocationMap[marker]
 
         # go to markerLocation via RRT
-        await rrt.pathPlan(robot, (x,y), startPosition, cmap)
-        dAngle = (h - robot.pose.rotation.angle_z.degrees - startPosition[2]) % 360
-        if dAngle >= 180: dAngle = -(360 - dAngle)
+        await rrt.pathPlan(robot, (x,y), robot_pose, cmap)
+        dAngle = diff_heading_deg(h, robot_pose[2])
         await robot.turn_in_place(cozmo.util.degrees(dAngle)).wait_for_completed()
+        robot_pose[2] += dAngle
         # TODO set heading angle
         print("Marker Path Planning complete " +  marker)
 
@@ -150,11 +151,11 @@ async def getLabel(robot, img_clf):
             maxFrequency = frequency[l]
 
     print(label)
-    # if label in markersSet:
-    #     markersSet.remove(label)
-    # elif len(markersSet) == 1:
-    #     label = list(markersSet)[0]
-    # else:
-    #     print("error: weird label")
+    if label in markersSet:
+        markersSet.remove(label)
+    elif len(markersSet) == 1:
+        label = list(markersSet)[0]
+    else:
+        print("error: weird label")
     await robot.say_text(label).wait_for_completed()
     return label
