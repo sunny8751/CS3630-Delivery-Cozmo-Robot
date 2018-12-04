@@ -78,7 +78,7 @@ async def run(robot):
 	# localize
 	# better word for start position is "position delta", difference of actual location and robot's pose
 
-	shouldLocalize = False
+	shouldLocalize = True
 
 	if shouldLocalize:
 		robot_pose = await localize(robot)
@@ -105,9 +105,19 @@ async def run(robot):
 
 	# store image marker locations
 	cmap.set_start(Node((robot_pose[0], robot_pose[1])))
-	markersMap = await getMarkerLocations(robot, img_clf, robot_pose, cmap)
+	#markersMap = await getMarkerLocations(robot, img_clf, robot_pose, cmap)
 
-	#await goToCubes(robot, markersMap, robot_pose, cmap)
+	if shouldLocalize:
+		robot_pose = await localize(robot)
+
+		await pathPlan(robot, (150,250), robot_pose, cmap)
+		await robot.turn_in_place(degrees(-robot_pose[2])).wait_for_completed()
+
+		await robot.say_text("Default position").wait_for_completed()
+
+		await goToCubes(robot, testMarkersMap, robot_pose, cmap)
+
+
 
 class RobotThread(threading.Thread):
 	"""Thread to run cozmo code separate from main thread
