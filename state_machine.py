@@ -63,7 +63,7 @@ async def run(robot):
 	# print(robot.pose.position.x, robot.pose.position.y, robot.pose.rotation.angle_z.degrees)
 	
 	global cubeDropoffLocation
-	startTime = time.time()
+	# startTime = time.time()
 	# train images to create image classifier
 	# filename = 'lab2classifier.sav'
 	# img_clf = imgclassification.ImageClassifier()
@@ -82,14 +82,14 @@ async def run(robot):
 
 	if shouldLocalize:
 		robot_pose = await localize(robot)
-
 		await pathPlan(robot, (150,250), robot_pose, cmap)
 		await robot.turn_in_place(degrees(-robot_pose[2])).wait_for_completed()
 
 		await robot.say_text("Default position").wait_for_completed()
+		robot_pose = [150, 250, 0]
 
 	# robot_pose = [152.4, 254, 0]
-	robot_pose = [150, 250, 0]
+	#robot_pose = [150, 250, 0]
 
 
 	# start_x = 20 * 25 - robot.pose.position.x
@@ -105,7 +105,8 @@ async def run(robot):
 
 	# store image marker locations
 	cmap.set_start(Node((robot_pose[0], robot_pose[1])))
-	#markersMap = await getMarkerLocations(robot, img_clf, robot_pose, cmap)
+	markersMap = await getMarkerLocations(robot, img_clf, robot_pose, cmap)
+	# cmap.set_start(Node((robot_pose[0], robot_pose[1])))
 
 	if shouldLocalize:
 		robot_pose = await localize(robot)
@@ -115,8 +116,10 @@ async def run(robot):
 
 		await robot.say_text("Default position").wait_for_completed()
 
-		await goToCubes(robot, testMarkersMap, robot_pose, cmap)
+		robot_pose = [150,250,0]
 
+		await goToCubes(robot, markersMap, robot_pose, cmap)
+		# await goToCubes(robot, testMarkersMap, robot_pose, cmap)
 
 
 class RobotThread(threading.Thread):

@@ -84,15 +84,29 @@ async def getMarkerLocations(robot, img_clf, robot_pose, cmap):
 
 
 async def goToCubes(robot, markersMap, robot_pose, cmap):
-    locations = ["L1", "U1", "R2", "D1"]
+    locations = ["L1", "U1"]
     dests = ["drone", "plane", "inspection", "place"]
-    angle = -50
+    angles = [-50,-50]
+    if markersMap["drone"] == "R2" or markersMap["plane"] == "R2":
+        locations.append("D2")
+        angles.append(90)
+    else:
+        locations.append("R2")
+        angles.append(-50)
+    if markersMap["drone"] == "D1" or markersMap["plane"] == "D1":
+        locations.append("L1")
+        angles.append(90)
+    else:
+        locations.append("D1")
+        angles.append(-50)
     await robot.set_head_angle(cozmo.util.degrees(0)).wait_for_completed()
     cubeSet = set()
 
     cmap.set_start(Node((robot_pose[0], robot_pose[1])))
 
     for i, location in enumerate(locations):
+        if len(cubeSet) == 3:
+            break
         cmap.remove_added_obstacles()
         await rrt.pathPlanCubes(robot, markersImageClassificationLocationMap[location], robot_pose, cmap)
         x,y,h = markersImageClassificationLocationMap[location]
@@ -100,25 +114,33 @@ async def goToCubes(robot, markersMap, robot_pose, cmap):
         dAngle = diff_heading_deg(h, robot_pose[2])
 
         await robot.turn_in_place(cozmo.util.degrees(dAngle)).wait_for_completed()
-        await robot.turn_in_place(cozmo.util.degrees(angle)).wait_for_completed()
+        await robot.turn_in_place(cozmo.util.degrees(angles[i])).wait_for_completed()
 
-        robot_pose[2] += angle + dAngle
+        robot_pose[2] += angles[i] + dAngle
         robot_pose[2] %= 360
 
         try:
             cube = await robot.world.wait_for_observed_light_cube(timeout=3)
+            if cube.object_id in cubeSet:
+                cube = None
         except Exception as e:
             cube = None
         counter = 0
-        while cube is None and counter < 5:
+        while cube is None:
+            if counter == 5:
+                break
             await robot.turn_in_place(cozmo.util.degrees(increment)).wait_for_completed()
             print("Turning ", increment)
             robot_pose[2] += increment
             robot_pose[2] %= 360
             try:
                 cube = await robot.world.wait_for_observed_light_cube(timeout=3)
+                if cube.object_id in cubeSet:
+                    print("This cube has already been picked up")
+                    cube = None
             except Exception as e:
                 cube = None
+            counter += 1
         if cube == None:
             last_pose = robot.pose
             continue

@@ -231,6 +231,10 @@ async def localize(robot: cozmo.robot.Robot):
             await robot.drive_straight(cozmo.util.distance_mm(dist), speed=cozmo.util.speed_mmps(60)).wait_for_completed()
 
             print("localize xyh:",x,y,h)
+
+            pf = ParticleFilter(grid)
+            localized = False
+            curr_action = None
             # newAngle = diff_heading_deg(h, robot.pose.rotation.angle_z.degrees) % 360
             # return (x-robot.pose.position.x,y-robot.pose.position.y, newAngle)
             return [x,y,h]
